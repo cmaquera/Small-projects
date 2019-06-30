@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width,user-scalable=yes" />
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <p id="x"></p>
+        <script type="text/javascript">
+
+
+var canvas = null;
+var ctx = null;
+var circles = [];
+var number = 50;
+var x, y, z;
+
+function handleMotionEvent(event) {
+    x = event.accelerationIncludingGravity.x;
+    y = event.accelerationIncludingGravity.y;
+    z = event.accelerationIncludingGravity.z;
+}
+
+window.addEventListener("devicemotion", handleMotionEvent, false);
+
+function init() {
+	canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
+  
+	for(var i = 0; i < number; i++){
+  	circles.push(new circle(rnd(1,canvas.width), rnd(1,canvas.height), rnd(5,25), rnd_color_rgba()));
+  }
+
+  window.requestAnimationFrame(draw);
+}
+
+function draw() {
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  draw_circles(ctx);
+  
+  ctx.font="20px Georgia";
+  ctx.fillText("x : " + x, 50, 30); 
+  ctx.fillText("y : " + y, 50, 50); 
+  ctx.fillText("z : " + z, 50, 70);
+  
+  ctx.beginPath();
+  ctx.arc(10, 10, z, 0, 2 * Math.PI);
+  ctx.fill();
+  
+  move_circles();
+
+  window.requestAnimationFrame(draw);
+}
+
+function draw_circles(ctx){
+	for(var i = 0; i < number; i++){
+  	circles[i].draw(ctx);
+  }
+}
+
+function move_circles(){
+	for(var i = 0; i < number; i++){
+    circles[i].move(0,y);
+    //circles[i].move(rnd(-1,-5),rnd(1,5)); //Derecha inferior
+    //circles[i].move(rnd(1,5),rnd(1,5)); //Izquierda inferior
+    //circles[i].move(rnd(1,5),rnd(-1,-5)); //Derecha superior
+    //circles[i].move(rnd(-1,-5),rnd(-1,-5)); //Izquierda superior
+  }
+}
+
+// Funcion de generar un color aleatorio RGBA
+function rnd_color_rgba(){
+  return "rgba("+ rnd(0, 255) +", "+ rnd(0, 255) +", "+ rnd(0, 255) +", "+ ((Math.random() * (0.3 - 0.7) + 0.7).toFixed(4)) +")";
+}
+
+// Funcion de aleatorio entre dos nuemeros
+function rnd(s, f){
+	return Math.floor((Math.random() * f) + s);
+}
+
+class circle{
+  constructor(posx, posy, radius, color) {
+  	this.posx = posx;
+    this.posy = posy;
+    this.radius = radius;
+    this.color = color;
+  }
+  
+  draw(ctx){
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.posx, this.posy, this.radius, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+  
+  move(movx, movy){
+  	if(canvas.height < this.posy){
+    	this.posy = canvas.height;
+    }
+    if(0 > this.posy){
+    	this.pposy = 0;
+    }
+    if(canvas.width < this.posx){
+    	this.posx = canvas.width;
+    }
+    if(0 > this.posx){
+    	this.posx = 0;
+    }
+    	
+    //this.posx = this.posx + (movx/2) * (this.radius/Math.abs(movx));
+    this.posy = this.posy + (movy/2) * (this.radius/Math.abs(movy));
+  	this.posx = this.posx + movx;
+  }  
+}
+
+
+
+
+init();
+
+
+        </script>
+    </body>
+</html>

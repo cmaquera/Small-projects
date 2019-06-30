@@ -1,0 +1,164 @@
+@import url('https://font.googleapis.com/css?family=Droid+Sans+Mono');
+
+input{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 2px solid #16F24D;
+    font-family: 'Droid Sans Mono', monospace;
+    font-size: 20px;
+}
+
+.btn{
+    background-color: #16F24D; /* Green */
+    border: none;
+    color: #0D0D0D;
+    text-align: center;
+	text-decoration: none;
+	font-family: 'Droid Sans Mono', monospace;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+	cursor: pointer;
+}
+
+.btn:hover{
+    background: #055902;
+    color: #6DF28E;
+}
+
+.btn1{
+    padding: 10px 24px;
+}
+
+#btn-2:focus{
+	background: #055902;
+    color: #6DF28E;
+}
+
+html {
+    background-color: #0D0D0D;
+    color: #16F24D;
+    font-family: 'Droid Sans Mono', monospace;
+    /*font-size: 30px;*/
+}
+
+h1{
+    text-align: center;
+    padding: 3px;
+}
+
+.contenedor{
+    text-align: center;
+    padding-top: 50px;
+}
+
+/*display: block;*/
+
+.contenido{
+    display: inline-block;
+    margin: 1em;
+}
+
+.contenido a img{
+    width: 300px;
+    height: auto;
+    border: inset 8px;
+    display: block;
+}
+
+.contenido a:link, .contenido a:hover, .contenido a:visited, .contenido a:active{
+    text-decoration: none;
+    color: #16F24D;
+}
+
+.footer{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;  
+    padding: 1rem;
+    text-align: center;
+    background-color: #0D0D0D;
+}
+
+.footer a{
+    color: white;
+}
+
+html {
+  height: 100%;
+}
+
+*
+*:before,
+*:after {
+box-sizing: inherit;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  padding-bottom: 6rem;
+  min-height: 100%;
+}
+
+/* Diseño de la interface */
+
+#formulario0{
+	display: none;
+	text-align: center;
+}
+
+#formulario1{
+	display: none;
+	text-align: center;
+}
+
+#formulario2{
+	display: none;
+	text-align: center;
+}
+
+#formulario2 .contenido .campo{
+	width: 7em;
+}
+
+#actualizar{
+	width: 50px;
+	height: 50px;
+	position:fixed;
+	filter: invert(100%);
+	top:0px;
+	right:0px;
+	margin:1em;
+	--webkit-transition: all .3s;
+    -o-transition: all .3s;
+    transition: all .3s;
+}
+
+#actualizar:hover{
+	width: 65px;
+	height: 65px;
+}
+
+#micanvas{
+	border: 5px solid #055902;
+	background-color: #6DF28E;
+	width: 1000px;
+	height: 600px;
+}
+
+#dcanvas{
+	text-align: center;
+	display: block;
+}
+
+.linea{
+	display: inline-block;
+	margin: 10px;
+	text-align: center;
+}
+

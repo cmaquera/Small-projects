@@ -1,0 +1,82 @@
+/* latin */
+@font-face {
+  font-family: 'Luckiest Guy';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Luckiest Guy'), local('LuckiestGuy-Regular'), url(https://fonts.gstatic.com/s/luckiestguy/v6/5718gH8nDy3hFVihOpkY5Ogdm0LZdjqr5-oayXSOefg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+
+html{
+	background-color: rgba(0,0,0,.2);
+}
+
+.botones{
+	margin: 1.5em;
+	background: rgba(153,102,51,.5);
+	border: solid 0;
+	color: rgba(255,255,255,.7);
+	padding: 10px;
+	border-radius: 0.2em;
+}
+
+.campo{
+	width: 6em;
+	height: 1.5em;
+	margin: 0.5em;
+	border-radius: 0.3em;
+	border: solid 2px rgba(255,255,255,.1);
+}
+
+.contenido{
+	width: 400px;
+	height: 230px;
+	background-color: rgba(0,0,0,.7);
+	padding: 0.5em;
+	color: rgba(255,255,255,0.7);
+	border-radius: 0.5em;
+	position: absolute;
+	top:50%;
+	margin-left: -200px;
+	margin-top: -100px;
+	left:50%;
+	--webkit-transition: all .5s;
+    -o-transition: all .5s;
+    transition: all .5s;
+}
+/*
+#formulario0{
+	display: none;
+	text-align: center;
+}
+
+#formulario1{
+	display: none; 
+	text-align: center;
+}
+
+#formulario2{
+	display: block;
+	text-align: center;
+}*/
+
+#formulario2 .contenido .campo{
+	width: 7em;
+}
+
+form{
+	display: none;
+	text-align: center;
+}
+
+#formulario3{
+	display: block;
+}
+
+#titulo{
+	text-align: center;
+	font-family: Luckiest Guy;
+	text-shadow: 1px 1px 0px white, 0px 0px 2px white;
+	font-size: 30px;
+	color: rgba(153,102,51,.9);
+}

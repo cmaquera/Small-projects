@@ -1,0 +1,22 @@
+{
+  "name": "dbgame",
+  "version": "0.0.1",
+  "description": "Es un juego que usa una base de datos mysql",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "juego",
+    "nodejs",
+    "base",
+    "de",
+    "datos"
+  ],
+  "author": "PrograClub",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mysql": "^2.12.0"
+  }
+}
