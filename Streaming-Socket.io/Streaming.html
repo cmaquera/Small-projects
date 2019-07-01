@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <title>...Video</title>
+        <style type="text/css">
+            video{
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <video autoplay></video>
+        <canvas id="micanvas" width="800" height="600"> Tu navegador no soporta canvas</canvas>
+        <script src="http://localhost:3737/socket.io/socket.io.js"></script>
+        <script type="text/javascript">
+            var bandera= 0;
+            var websocket = io.connect("http://localhost:3737");
+            window.URL = window.URL || window.webkitURL;
+            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+            
+            
+            navigator.getUserMedia({audio: true, video: { width: 1280, height: 720 }},function(vid){
+                bandera = 1;
+                document.querySelector('video').srcObject = vid; //window.URL.createObjectURL(vid);
+            },function(err) {
+                console.log("An error occured! " + err);
+            });
+            
+            window.requestAnimFrame = (function(callback){
+                return window.requestAnimationFrame ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function(callback){
+                    window.setTimeout(callback, 1000 / 100);
+                };
+            })();
+            
+            
+            function dFrame(ctx, canvas, video){
+                ctx.drawImage(video, 0,0);
+                
+                var dataURL = canvas.toDataURL('image/jpeg', 0.2);
+                
+                if(bandera != 0){
+                    websocket.emit('newFrame', dataURL);
+                }
+                
+                requestAnimFrame(function(){
+                   dFrame(ctx,canvas, video); 
+                });
+            }
+            
+            window.addEventListener('load', init);
+            
+            
+            function init(){
+                var canvas = document.querySelector('#micanvas');
+                var video = document.querySelector('video');
+                var ctx = canvas.getContext('2d');
+                
+                dFrame(ctx, canvas, video);
+            }
+            
+        </script>
+    </body>
+</html>

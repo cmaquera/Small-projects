@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Particulas</title>
+		<style type="text/css">
+			canvas{
+				position:fixed;
+				background: rgba(0,0,0,.45);
+				height: 100%;
+				width: 100%;
+			}
+			body{
+				margin: 0;
+			}
+		</style>
+		<script type="text/javascript">
+	        function resize_canvas(){
+	            var canvas = document.getElementById("micanvas");
+	            if (canvas.width  < window.innerWidth)
+	            {
+	                canvas.width  = window.innerWidth;
+	            }
+	
+	            if (canvas.height < window.innerHeight)
+	            {
+	                canvas.height = window.innerHeight;
+	            }
+	        }
+		</script>
+	</head>
+	<body onresize="resize_canvas()">
+		<canvas id="micanvas">Tu navegador no puede soportar la tecnologia de canvas, use unaversion mas nueva de su navegador
+		</canvas>
+		<script type="text/javascript">
+			var colores = ['','#995C1F', '#B26B24', '#CC7A29', '#E68A2E', '#FF9933', '#FFA347', ''];
+			var canvas = null,
+			    ctx = null,
+			    x = 50,
+			    y = 50;
+			var puntero={x:0, y:0}
+			var jugador= new Particula(100,100,200);
+			var area = {x:0,y:0,radio:100}
+			var ultimaPresion = null;
+			var ultimaLiberacion = null;
+			var particulas = [];
+			var ang = null;
+			var lastUpdate = 0;
+			var movimiento = undefined;
+			
+			function habilitarEntradas(){
+				document.addEventListener('mousemove',function(evt){ 
+					puntero.x=evt.pageX-canvas.offsetLeft; 
+					puntero.y=evt.pageY-canvas.offsetTop;
+					movimiento = true;
+				},false);
+				
+				document.addEventListener('mouseup', function (evt) { 
+					ultimaLiberacion = evt.which; 
+				}, false);
+				
+				canvas.addEventListener('mousedown',function(evt){ 
+					ultimaPresion=evt.which;
+				},false);
+			}
+			
+			window.requestAnimationFrame = (function () {
+			    return window.requestAnimationFrame ||
+			        window.mozRequestAnimationFrame ||
+			        window.webkitRequestAnimationFrame ||
+			        function (callback) {
+			            window.setTimeout(callback, 5);
+			        };
+			}());
+			
+			function aleatorio(max, min){
+				return Math.floor((Math.random() * max) + min);
+			}
+			
+			function pintar(ctx) {
+			    ctx.fillStyle = '#000';
+			    ctx.fillRect(0, 0, canvas.width, canvas.height);
+			    
+			    for(var i =0 ; i< particulas.length; i++){
+			    	particulas[i].pintar(ctx);
+			    }
+			    /*
+			    ctx.fillStyle = "#0f0";
+				ctx.beginPath(); 
+				ctx.arc(jugador.x, jugador.y, jugador.radio, 0, Math.PI * 2, true);
+				ctx.fill();*/
+				/*
+				ctx.strokeStyle ='#ff0';			    
+				ctx.beginPath();
+				ctx.moveTo(0,0);
+				ctx.lineTo(puntero.x,puntero.y);
+				ctx.stroke();*/
+				/*
+				ctx.fillStyle='#ff0';
+				ctx.fillText('Distancia: ' + particulas[0].distancia(jugador),10,10);
+				ctx.fillText('Anglulo: ' + ang*(180/Math.PI),10,20);
+				ctx.fillText('x: ' + Math.cos(ang),10,30);
+				ctx.fillText('y: ' + Math.sin(ang),10,40);*/
+				ctx.fillText('Cantidad de particulas : ' + particulas.length,10,10);
+				
+				
+			}
+			
+			function movimientoAleatorio(jugador,canvas){
+				
+				/*
+				var desx = 5, desy = 5;
+				if(jugador.x < 0){ 
+					desx = aleatorio(5,0);
+					desy = aleatorio(5,-5);
+				}
+				if(jugador.x > canvas.width){ 
+					desx = aleatorio(5,-5);
+					desy = aleatorio(5,-5);
+				}
+				if(jugador.y < 0){ 
+					desy = aleatorio(5,0);
+					desx = aleatorio(5,-5);
+				}
+				if(jugador.y > canvas.height){ 
+					desy = aleatorio(0,-5);
+					desx = aleatorio(5,-5);
+				}
+				
+					jugador.x += desx;
+					jugador.y += desy;
+				*/
+				
+				jugador.x = aleatorio(canvas.width,0);
+				jugador.y = aleatorio(canvas.height,0);
+				
+			}
+			
+			function act(deltaTime) {
+				
+				
+				jugador.x = puntero.x;
+				jugador.y = puntero.y;
+				
+				if(movimiento !== true){
+					movimientoAleatorio(jugador,canvas);
+				}
+				if(ultimaPresion == 1){
+					movimiento = !movimiento;
+				}
+				/*
+				else if(ultimaLiberacion == 1){
+					ultimaPresion = null;
+				}*/
+				
+				for(var i=0; i< 50; i++){
+					particulas.push(new Particula(jugador.x, jugador.y,3, aleatorio(360,0), 9.5*(800/1000)));
+				}
+				
+				for(var i=0; i<particulas.length; i++){
+					particulas[i].vida-=deltaTime;
+					if(particulas[i].vida<0){
+						particulas.splice(i, 1);
+					}
+					particulas[i].mover(aleatorio(5,1));
+					
+					/*	
+					if(jugador.distancia(particulas[i].posinicial) < 0){
+					}
+					else if(particulas[i].distancia(jugador) < 0){
+						ang = particulas[i].angulo(particulas[i].posinicial);
+						particulas[i].mover(ang,10);
+					}
+					
+					
+					if(jugador.distancia((particulas[i])) > 100){
+						
+					}*/
+					
+					if(particulas[i].radio == particulas[i].rmax) 
+						particulas[i].estado = true;
+					if(particulas[i].radio == particulas[i].rmin) 
+						particulas[i].estado = false;
+						
+					if(particulas[i].estado) 
+						particulas[i].radio--;
+					else particulas[i].radio++;
+				}
+				
+				
+				ultimaPresion = null;
+			}
+			
+			function correr() {
+			    window.requestAnimationFrame(correr);
+			    
+			    
+			    var now=Date.now(); 
+			    var deltaTime=(now-lastUpdate)/1000; 
+			    if(deltaTime>1) deltaTime=0; 
+			    lastUpdate=now;
+			    
+			    act(deltaTime);
+			    pintar(ctx);
+			}
+			
+			function init() {
+			    canvas = document.getElementById('micanvas');
+			    canvas.height = window.innerHeight;
+			    canvas.width = window.innerWidth;
+			    ctx = canvas.getContext('2d');
+			    
+			    habilitarEntradas();
+			    correr();
+			}
+			
+			function Particula(x, y, radio, angulo, vida){
+				this.x = x;
+				this.y = y;
+				this.posinicial = {x:x, y:y};
+				this.radio = radio;
+				this.estado = false;
+				this.rmax = aleatorio(5,3);
+				this.rmin = aleatorio(3,0);
+				//this.color = colores[aleatorio(8,0)];
+				this.color = "rgb("+aleatorio(255,0)+","+aleatorio(255,0)+","+aleatorio(255,0)+")";
+				this.angulo = angulo;
+				this.vida = vida;
+			}
+			
+			Particula.prototype.distancia = function (particula) { 
+				if (particula !== null) { 
+					var dx = this.x - particula.x, 
+						dy = this.y - particula.y, 
+						radioParticula = particula.radio || 0; 
+					return (Math.sqrt(dx * dx + dy * dy) - (this.radio + radioParticula)); 
+				}
+			}; 
+			
+			Particula.prototype.pintar = function (ctx) { 
+				if (ctx !== undefined) {
+					ctx.fillStyle = this.color;
+					ctx.beginPath(); 
+					ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2, true);
+					ctx.fill();
+				}
+			};
+			
+			Particula.prototype.mover= function(velocidad){
+				if(this.angulo != null){
+					this.x -= Math.cos(this.angulo)*velocidad;
+					this.y -= Math.sin(this.angulo)*velocidad;
+				}
+			}
+			/*
+			Particula.prototype.angulo = function(circulo){
+				if(circulo != null)
+					return (Math.atan2(circulo.y-this.y,circulo.x-this.x));
+			}*/
+			
+			window.addEventListener('load', init, false);
+		</script>
+	</body>
+</html>

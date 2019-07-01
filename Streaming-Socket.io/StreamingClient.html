@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <title>...Video</title>
+    </head>
+    <body>
+        <img id="miimg"></img>
+        <script src="http://localhost:3737/socket.io/socket.io.js"></script>
+        <script>
+            var websocket = io.connect("http://localhost:3737");
+            websocket.on('setFrame', proc);
+            
+            function proc(img){
+                document.querySelector("miimg").src = img;
+            };
+            
+        </script>
+    </body>
+</html>
