@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/cmaquera/shoot-game#readme",
   "dependencies": {
-    "socket.io": "2.2.0"
+    "socket.io": "2.5.0"
   }
 }
