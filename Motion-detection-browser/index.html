@@ -1,15 +1,106 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8"/>
-		<title>Motion detection</title>
-		<link rel="stylesheet" type="text/css" href="../shared.css">
-	</head>
-	<body>
-		<header class="site-header">
-			<a class="back-link" href="../index.html">← Volver al índice</a>
-			<h1>Motion Detection Browser</h1>
-		</header>
-		<footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
-	</body>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>Motion Detection Browser</title>
+	<link rel="stylesheet" href="../shared.css">
+	<style type="text/css">
+		.md-main {
+			max-width: 760px;
+			margin: 0 auto;
+			padding: 1.25rem 1rem 2rem;
+			text-align: center;
+		}
+		.md-estado {
+			color: #6DF28E;
+			font-size: 14px;
+			margin: .5rem 0 1.25rem;
+			min-height: 1.2em;
+		}
+		#btn-permiso {
+			display: none;
+			margin: 0 auto 1rem;
+		}
+		.md-cards {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 1.25rem;
+		}
+		.md-card {
+			flex: 1 1 290px;
+			max-width: 350px;
+			background: rgba(255, 255, 255, .03);
+			border: 1px solid #16F24D;
+			border-radius: 8px;
+			padding: .75rem;
+		}
+		.md-card h2 {
+			font-size: 16px;
+			margin: 0 0 .6rem;
+			color: #16F24D;
+		}
+		canvas {
+			width: 100%;
+			height: auto;
+			display: block;
+			background: radial-gradient(circle at center, #1a1f1a, #0D0D0D);
+			border-radius: 6px;
+			touch-action: none;
+		}
+		.md-readouts {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: .6rem;
+			margin-top: 1.5rem;
+		}
+		.md-dato {
+			border: 1px solid #16F24D;
+			border-radius: 6px;
+			padding: .55rem .75rem;
+			font-size: 13px;
+			background: rgba(22, 242, 77, .05);
+			text-align: left;
+		}
+		.md-dato b {
+			font-size: 16px;
+			color: #6DF28E;
+		}
+	</style>
+</head>
+<body>
+	<header class="site-header">
+		<a class="back-link" href="../index.html">← Volver al índice</a>
+		<h1>Motion Detection Browser</h1>
+	</header>
+
+	<main class="md-main">
+		<p id="estado" class="md-estado">Iniciando…</p>
+		<button id="btn-permiso" class="btn btn1" type="button">Permitir acelerómetro</button>
+
+		<div class="md-cards">
+			<section class="md-card">
+				<h2>Tilt Ball</h2>
+				<canvas id="canvas-bola" width="320" height="260"></canvas>
+			</section>
+			<section class="md-card">
+				<h2>Partículas</h2>
+				<canvas id="canvas-particulas" width="320" height="260"></canvas>
+			</section>
+		</div>
+
+		<div class="md-readouts">
+			<span class="md-dato">Aceleración X <b id="val-x">0.00</b> g</span>
+			<span class="md-dato">Aceleración Y <b id="val-y">0.00</b> g</span>
+			<span class="md-dato">Aceleración Z <b id="val-z">0.00</b> g</span>
+			<span class="md-dato">Rotación α <b id="val-alpha">0.0</b>°</span>
+			<span class="md-dato">Rotación β <b id="val-beta">0.0</b>°</span>
+			<span class="md-dato">Rotación γ <b id="val-gamma">0.0</b>°</span>
+		</div>
+	</main>
+
+	<footer class="site-footer">Creado por <a href="https://github.com/cmaquera">CMaquera</a></footer>
+	<script type="text/javascript" src="codigo.js"></script>
+</body>
 </html>
