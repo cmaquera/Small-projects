@@ -61,7 +61,17 @@ function moverParticulas(dt, ax, ay) {
 // ---- Sensores ----
 var muestrasIntervalo = 0;
 var muestrasTotal = 0;
+var fuente = "ninguna";
 var depuracionEl = document.getElementById("depuracion");
+
+function registrarMuestra() {
+	muestrasIntervalo++;
+	muestrasTotal++;
+}
+
+function toGrados(rad) {
+	return rad * 180 / Math.PI;
+}
 
 window.addEventListener("devicemotion", function (ev) {
 	var acc = ev.accelerationIncludingGravity || ev.acceleration;
@@ -69,8 +79,9 @@ window.addEventListener("devicemotion", function (ev) {
 		sensor.x = acc.x || 0;
 		sensor.y = acc.y || 0;
 		sensor.z = acc.z || 0;
-		muestrasIntervalo++;
-		muestrasTotal++;
+		sensor.activo = true;
+		fuente = "devicemotion";
+		registrarMuestra();
 	}
 }, false);
 
@@ -78,13 +89,60 @@ window.addEventListener("deviceorientation", function (ev) {
 	sensor.alpha = ev.alpha || 0;
 	sensor.beta = ev.beta || 0;
 	sensor.gamma = ev.gamma || 0;
+	sensor.activo = true;
 }, false);
 
 window.addEventListener("deviceorientationabsolute", function (ev) {
 	sensor.alpha = ev.alpha || 0;
 	sensor.beta = ev.beta || 0;
 	sensor.gamma = ev.gamma || 0;
+	sensor.activo = true;
 }, false);
+
+function iniciarSensoresGenericos() {
+	if (typeof window.Accelerometer === "undefined") { return false; }
+	var arranco = false;
+	try {
+		var acelerometro = new window.Accelerometer({ frequency: 60 });
+		acelerometro.onreading = function () {
+			sensor.x = (acelerometro.x || 0) / 9.80665;
+			sensor.y = (acelerometro.y || 0) / 9.80665;
+			sensor.z = (acelerometro.z || 0) / 9.80665;
+			sensor.activo = true;
+			fuente = "generic accel";
+			registrarMuestra();
+		};
+		acelerometro.onerror = function (e) { fuente = "errAccel:" + e.error.name; };
+		acelerometro.start();
+		arranco = true;
+	} catch (e) { fuente = "errAccelStart"; }
+
+	try {
+		var orient = null;
+		if (typeof window.AbsoluteOrientationSensor !== "undefined") {
+			orient = new window.AbsoluteOrientationSensor({ frequency: 30 });
+		} else if (typeof window.RelativeOrientationSensor !== "undefined") {
+			orient = new window.RelativeOrientationSensor({ frequency: 30, referenceFrame: "device" });
+		}
+		if (orient) {
+			orient.onreading = function () {
+				var q = orient.quaternion;
+				if (q && q.length === 4) {
+					sensor.alpha = toGrados(Math.atan2(2 * (q[0] * q[1] + q[2] * q[3]), 1 - 2 * (q[1] * q[1] + q[2] * q[2])));
+					sensor.beta = toGrados(Math.asin(Math.max(-1, Math.min(1, 2 * (q[0] * q[2] - q[3] * q[1])))));
+					sensor.gamma = toGrados(Math.atan2(2 * (q[0] * q[3] + q[1] * q[2]), 1 - 2 * (q[2] * q[2] + q[3] * q[3])));
+				}
+				sensor.activo = true;
+				fuente = "generic orient";
+				registrarMuestra();
+			};
+			orient.onerror = function (e) { fuente += "errOrient:" + e.error.name; };
+			orient.start();
+			arranco = true;
+		}
+	} catch (e) { fuente += " errOrientStart"; }
+	return arranco;
+}
 
 function leerAceleracion() {
 	if (sensor.activo) {
@@ -115,16 +173,16 @@ function pedirPermiso() {
 	var peticiones = [];
 	if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
 		peticiones.push(DeviceMotionEvent.requestPermission());
-	} else {
-		peticiones.push(Promise.resolve("granted"));
 	}
 	if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
 		peticiones.push(DeviceOrientationEvent.requestPermission());
 	}
+	if (peticiones.length === 0) { peticiones.push(Promise.resolve("granted")); }
 	Promise.all(peticiones).then(function (resultados) {
 		var concedido = resultados.indexOf("denied") === -1;
 		if (concedido) {
 			sensor.activo = true;
+			iniciarSensoresGenericos();
 			setTimeout(function () {
 				if (muestrasTotal === 0) { activarSimulacion(); }
 			}, 3000);
@@ -134,13 +192,20 @@ function pedirPermiso() {
 			if (botonPermiso) { botonPermiso.style.display = "none"; }
 			activarSimulacion();
 		}
-	}).catch(activarSimulacion);
+	}).catch(function () {
+		if (botonPermiso) { botonPermiso.style.display = "none"; }
+		activarSimulacion();
+	});
 }
 
+var genericoArrancado = iniciarSensoresGenericos();
 if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
 	if (botonPermiso) {
 		botonPermiso.style.display = "inline-block";
 		botonPermiso.addEventListener("click", pedirPermiso, false);
+	}
+	if (!genericoArrancado && estadoEl) {
+		estadoEl.textContent = "Pulsa el botón para permitir el acelerómetro.";
 	}
 } else {
 	sensor.activo = true;
@@ -215,9 +280,9 @@ function bucle(tiempo) {
 	}
 
 	if (tiempo - ultimoSegundo >= 1000) {
-		if (depuracionEl && sensor.activo) {
-			depuracionEl.textContent = "muestras/s: " + muestrasIntervalo +
-				(sim.usandoSim ? " · usando simulación" : "");
+		if (depuracionEl) {
+			var extras = sim.usandoSim ? " · usando simulación" : (sensor.activo ? "" : " · esperando permiso");
+			depuracionEl.textContent = "muestras/s: " + muestrasIntervalo + " · " + fuente + extras;
 		}
 		muestrasIntervalo = 0;
 		ultimoSegundo = tiempo;
