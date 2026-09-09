@@ -1,120 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 	<title>Juego con Phaser</title>
 	<link rel="stylesheet" href="../shared.css">
 	<script type="text/javascript" src="phaser.min.js"></script>
+	<style type="text/css">
+		.juego {
+			display: flex;
+			justify-content: center;
+			padding: 1rem .5rem 0;
+		}
+		.juego canvas {
+			border: 2px solid #16F24D;
+			border-radius: 8px;
+			max-width: 100%;
+			height: auto;
+		}
+		.controles {
+			text-align: center;
+			padding: 1rem 0 1.5rem;
+		}
+		.controles .btn {
+			margin: 4px 6px;
+			font-size: 20px;
+			min-width: 60px;
+			-webkit-user-select: none;
+			user-select: none;
+			touch-action: manipulation;
+		}
+	</style>
 </head>
 <body>
 	<header class="site-header">
 		<a class="back-link" href="../index.html">← Volver al índice</a>
 		<h1>Juego con Phaser</h1>
 	</header>
-	<div id="game"></div>
+	<div id="game" class="juego"></div>
+	<div class="controles">
+		<button class="btn btn1" id="btn-izq" type="button">◀</button>
+		<button class="btn btn1" id="btn-der" type="button">▶</button>
+		<button class="btn btn1" id="btn-salto" type="button">⤒</button>
+		<button class="btn btn1" id="btn-reiniciar" type="button">Reiniciar</button>
+	</div>
 	<footer class="site-footer">Creado por <a href="https://github.com/cmaquera">CMaquera</a></footer>
+
 	<script type="text/javascript">
-		 // Create the state that will contain the whole game
-		var mainState = {  
-		    preload: function() {  
-		        // Here we preload the assets
-		        game.load.image('player', 'assets/player.png');
+		var controles = { izq: false, der: false, salto: false };
+
+		function btnPulsar(id, propiedad) {
+			var b = document.getElementById(id);
+			if (!b) { return; }
+			var act = function (v) { return function (e) { controles[propiedad] = v; e.preventDefault(); }; };
+			b.addEventListener('touchstart', act(true), false);
+			b.addEventListener('touchmove', act(true), false);
+			b.addEventListener('touchend', act(false), false);
+			b.addEventListener('touchcancel', act(false), false);
+			b.addEventListener('mousedown', act(true), false);
+			b.addEventListener('mouseup', act(false), false);
+			b.addEventListener('mouseleave', act(false), false);
+		}
+		btnPulsar('btn-izq', 'izq');
+		btnPulsar('btn-der', 'der');
+		btnPulsar('btn-salto', 'salto');
+
+		var mainState = {
+			preload: function () {
+				game.load.image('player', 'assets/player.png');
 				game.load.image('wall', 'assets/wall.png');
 				game.load.image('coin', 'assets/coin.png');
 				game.load.image('enemy', 'assets/enemy.png');
+			},
 
-		        game.stage.backgroundColor ="#3598db";
-		        game.physics.startSystem(Phaser.Physics.ARCADE);
-		        game.world.enableBody = true;
+			create: function () {
+				game.stage.backgroundColor = "#12202b";
+				game.physics.startSystem(Phaser.Physics.ARCADE);
+				game.world.enableBody = true;
 
+				this.cursor = game.input.keyboard.createCursorKeys();
+				this.espacio = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+				this.teclaR = game.input.keyboard.addKey(Phaser.Keyboard.R);
 
-		    },
+				this.player = game.add.sprite(70, 100, 'player');
+				this.player.body.gravity.y = 420;
+				this.player.body.collideWorldBounds = true;
 
-		    create: function() {  
-		        // Here we create the game
-		        this.cursor = game.input.keyboard.createCursorKeys();
-		        this.player = game.add.sprite(70, 100, 'player');
-		        this.player.body.gravity.y = 10;
+				this.walls = game.add.group();
+				this.coins = game.add.group();
+				this.enemies = game.add.group();
 
-		        this.walls = game.add.group();
-		        this.coins = game.add.group();
-		        this.enemies = game.add.group();
+				this.monedas = 0;
+				this.totalMonedas = 0;
+				this.ganado = false;
 
-		        var level = [
-				    'xxxxxxxxxxxxxxxxxxxxxx',
-				    '!         !          x',
-				    '!                 o  x',
-				    '!         o          x',
-				    '!                    x',
-				    '!     o   !    x     x',
-				    'xxxxxxxxxxxxxxxx!!!!!x',
+				var level = [
+					'xxxxxxxxxxxxxxxxxxxxxx',
+					'!     o          o   x',
+					'!   o  x!  !        x',
+					'!      x           o x',
+					'!   x     xx   o     x',
+					'!  o x     x   !     x',
+					'xxxxxxxxxxxxxxxxxxxxxx'
 				];
 
-				for(i=0; i < level.length; i++){
-					for(j=0; j < level[i].length; j++){
-						if(level[i][j] == "x"){
-							var wall = game.add.sprite(30+20*j, 30+20*i, 'wall');
+				for (var i = 0; i < level.length; i++) {
+					for (var j = 0; j < level[i].length; j++) {
+						var c = level[i][j];
+						var px = 30 + 20 * j;
+						var py = 30 + 20 * i;
+						if (c === 'x') {
+							var wall = game.add.sprite(px, py, 'wall');
 							this.walls.add(wall);
 							wall.body.immovable = true;
-						}else if(level[i][j] == "o"){
-							var coin = game.add.sprite(30+20*j, 30+20*i, 'coin');
+						} else if (c === 'o') {
+							var coin = game.add.sprite(px, py, 'coin');
 							this.coins.add(coin);
-						}else if(level[i][j] == "!"){
-							var enemy =  game.add.sprite(30+20*j, 30+20*i, 'enemy');
+							this.totalMonedas++;
+						} else if (c === '!') {
+							var enemy = game.add.sprite(px, py, 'enemy');
 							this.enemies.add(enemy);
+							enemy.body.gravity.y = 420;
+							enemy.body.collideWorldBounds = true;
+							enemy.body.velocity.x = j % 2 === 0 ? 60 : -60;
 						}
 					}
 				}
-		    },
 
-		    update: function() {  
-		        // Here we update the game 60 times per second
-		        // Move the player when an arrow key is pressed
-				
-				// Make the player jump if he is touching the ground
-				
-				console.log(this.player.body.onFloor() + "-----" + this.cursor.up.isDown);
+				this.textoMarcador = game.add.text(10, 6, 'Monedas: 0/' + this.totalMonedas,
+					{ font: "16px 'Droid Sans Mono', monospace", fill: '#6DF28E' });
+				this.textoAyuda = game.add.text(10, 28,
+					'← → / A D moverse    ↑ / ESPACIO saltar',
+					{ font: "12px 'Droid Sans Mono', monospace", fill: '#16F24D' });
+				this.textoEstado = game.add.text(250, 90, '',
+					{ font: "20px 'Droid Sans Mono', monospace", fill: '#fff' });
+				this.textoEstado.anchor.setTo(0.5);
+			},
 
-
-				if (this.cursor.up.isDown && this.player.body.onFloor()){
-				    this.player.body.velocity.y = -200;
-				    console.log('arriba');
+			update: function () {
+				if (this.ganado) {
+					if (this.cursor.up.isDown || this.espacio.isDown || this.teclaR.isDown || controles.salto) {
+						game.state.start('main');
+					}
+					return;
 				}
-				else if (this.cursor.left.isDown) {
-				    this.player.body.velocity.x = -200;
-				    console.log('izquierda');
-				}
-				else if (this.cursor.right.isDown) {
-				    this.player.body.velocity.x = 200;
-				    console.log('derecha');
-				}else{
+
+				var izquierda = this.cursor.left.isDown || controles.izq;
+				var derecha = this.cursor.right.isDown || controles.der;
+				var salto = this.cursor.up.isDown || this.espacio.isDown || controles.salto;
+
+				if (izquierda) {
+					this.player.body.velocity.x = -160;
+					this.player.scale.x = -1;
+				} else if (derecha) {
+					this.player.body.velocity.x = 160;
+					this.player.scale.x = 1;
+				} else {
 					this.player.body.velocity.x = 0;
 				}
-				
 
+				if (salto && this.player.body.onFloor()) {
+					this.player.body.velocity.y = -230;
+				}
 
-		        game.physics.arcade.collide(this.player, this.walls);
-		        game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this);
-		        game.physics.arcade.overlap(this.player, this.enemies, this.restart, null, this);
+				game.physics.arcade.collide(this.player, this.walls);
+				game.physics.arcade.collide(this.enemies, this.walls);
 
-		        
+				for (var i = 0; i < this.enemies.length; i++) {
+					var e = this.enemies.children[i];
+					if (e.body.blocked.left) { e.body.velocity.x = 60; }
+					else if (e.body.blocked.right) { e.body.velocity.x = -60; }
+				}
 
-		    },
+				game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this);
+				game.physics.arcade.overlap(this.player, this.enemies, this.morir, null, this);
 
-		    takeCoin: function(player, coin){
-		    	coin.kill();
-		    },
+				if (this.player.y > game.world.height + 100) {
+					game.state.start('main');
+				}
+			},
 
-		    restart: function(){
-		    	game.state.start('main');
-		    }
+			takeCoin: function (player, coin) {
+				coin.kill();
+				this.monedas++;
+				this.textoMarcador.setText('Monedas: ' + this.monedas + '/' + this.totalMonedas);
+				if (this.monedas >= this.totalMonedas) {
+					this.ganado = true;
+					this.textoEstado.setText('¡GANASTE!\npulsa R o el botón Reiniciar');
+				}
+			},
+
+			morir: function () {
+				game.state.start('main');
+			}
 		};
 
-		// Initialize the game and start our state
-		var game = new Phaser.Game(500, 200, Phaser.AUTO, 'game');  
-		game.state.add('main', mainState);  
+		var game = new Phaser.Game(500, 210, Phaser.AUTO, 'game');
+		game.state.add('main', mainState);
 		game.state.start('main');
 
+		document.getElementById('btn-reiniciar').addEventListener('click', function () {
+			game.state.start('main');
+		}, false);
 	</script>
 </body>
 </html>
