@@ -59,22 +59,32 @@ function moverParticulas(dt, ax, ay) {
 }
 
 // ---- Sensores ----
-function iniciarDispositivo() {
-	window.addEventListener("devicemotion", function (ev) {
-		var acc = ev.accelerationIncludingGravity;
-		if (acc) {
-			sensor.x = acc.x || 0;
-			sensor.y = acc.y || 0;
-			sensor.z = acc.z || 0;
-		}
-	}, false);
+var muestrasIntervalo = 0;
+var muestrasTotal = 0;
+var depuracionEl = document.getElementById("depuracion");
 
-	window.addEventListener("deviceorientation", function (ev) {
-		sensor.alpha = ev.alpha || 0;
-		sensor.beta = ev.beta || 0;
-		sensor.gamma = ev.gamma || 0;
-	}, false);
-}
+window.addEventListener("devicemotion", function (ev) {
+	var acc = ev.accelerationIncludingGravity || ev.acceleration;
+	if (acc) {
+		sensor.x = acc.x || 0;
+		sensor.y = acc.y || 0;
+		sensor.z = acc.z || 0;
+		muestrasIntervalo++;
+		muestrasTotal++;
+	}
+}, false);
+
+window.addEventListener("deviceorientation", function (ev) {
+	sensor.alpha = ev.alpha || 0;
+	sensor.beta = ev.beta || 0;
+	sensor.gamma = ev.gamma || 0;
+}, false);
+
+window.addEventListener("deviceorientationabsolute", function (ev) {
+	sensor.alpha = ev.alpha || 0;
+	sensor.beta = ev.beta || 0;
+	sensor.gamma = ev.gamma || 0;
+}, false);
 
 function leerAceleracion() {
 	if (sensor.activo) {
@@ -84,9 +94,9 @@ function leerAceleracion() {
 }
 
 function activarSimulacion() {
-	if (sensor.activo || sim.usandoSim) { return; }
+	if (sim.usandoSim) { return; }
 	sim.usandoSim = true;
-	if (estadoEl) { estadoEl.textContent = "Sin sensores: mueve el ratón o el dedo para simular el movimiento."; }
+	if (estadoEl) { estadoEl.textContent = "Sin lecturas de sensores: mueve el ratón o el dedo para simular el movimiento."; }
 	window.addEventListener("mousemove", function (ev) {
 		var r = partCanvas.getBoundingClientRect();
 		sim.x = (ev.clientX - (r.left + r.width / 2)) / 30;
@@ -102,15 +112,22 @@ function activarSimulacion() {
 }
 
 function pedirPermiso() {
-	var p = Promise.resolve("granted");
+	var peticiones = [];
 	if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
-		p = DeviceMotionEvent.requestPermission();
+		peticiones.push(DeviceMotionEvent.requestPermission());
+	} else {
+		peticiones.push(Promise.resolve("granted"));
 	}
-	p.then(function (resultado) {
-		if (resultado === "granted") {
+	if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+		peticiones.push(DeviceOrientationEvent.requestPermission());
+	}
+	Promise.all(peticiones).then(function (resultados) {
+		var concedido = resultados.indexOf("denied") === -1;
+		if (concedido) {
 			sensor.activo = true;
-			iniciarDispositivo();
-			setTimeout(activarSimulacion, 1500);
+			setTimeout(function () {
+				if (muestrasTotal === 0) { activarSimulacion(); }
+			}, 3000);
 			if (estadoEl) { estadoEl.textContent = "Sensores activados. Mueve tu dispositivo."; }
 			if (botonPermiso) { botonPermiso.style.display = "none"; }
 		} else {
@@ -126,9 +143,10 @@ if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.request
 		botonPermiso.addEventListener("click", pedirPermiso, false);
 	}
 } else {
-	iniciarDispositivo();
 	sensor.activo = true;
-	setTimeout(activarSimulacion, 1500);
+	setTimeout(function () {
+		if (muestrasTotal === 0) { activarSimulacion(); }
+	}, 3000);
 	if (estadoEl) { estadoEl.textContent = "Sensores activados. Mueve tu dispositivo."; }
 }
 
@@ -187,12 +205,22 @@ function actualizarLecturas(acc) {
 }
 
 var ultimoTiempo = 0;
+var ultimoSegundo = 0;
 function bucle(tiempo) {
 	var dt = ultimoTiempo ? (tiempo - ultimoTiempo) : 40;
 	ultimoTiempo = tiempo;
 	if (Math.abs(sim.x) < 0.05 && Math.abs(sim.y) < 0.05) {
 		sim.x = 0;
 		sim.y = 0;
+	}
+
+	if (tiempo - ultimoSegundo >= 1000) {
+		if (depuracionEl && sensor.activo) {
+			depuracionEl.textContent = "muestras/s: " + muestrasIntervalo +
+				(sim.usandoSim ? " · usando simulación" : "");
+		}
+		muestrasIntervalo = 0;
+		ultimoSegundo = tiempo;
 	}
 
 	var acc = leerAceleracion();
