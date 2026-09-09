@@ -157,11 +157,16 @@ function iniciarSensoresGenericos() {
 	return arranco;
 }
 
+function num(v) {
+	var n = Number(v);
+	return isFinite(n) ? n : 0;
+}
+
 function leerAceleracion() {
 	if (sensor.activo) {
-		return { x: sensor.x, y: sensor.y, z: sensor.z };
+		return { x: num(sensor.x), y: num(sensor.y), z: num(sensor.z) };
 	}
-	return { x: sim.x, y: sim.y, z: sim.z };
+	return { x: num(sim.x), y: num(sim.y), z: num(sim.z) };
 }
 
 function activarSimulacion() {
@@ -282,8 +287,8 @@ function pintarBola(acc) {
 
 	ctxBola.fillStyle = "#6DF28E";
 	ctxBola.font = "12px 'Droid Sans Mono', monospace";
-	ctxBola.fillText("ax: " + acc.x.toFixed(2), 8, H - 20);
-	ctxBola.fillText("ay: " + acc.y.toFixed(2), 8, H - 7);
+	ctxBola.fillText("ax: " + num(acc.x).toFixed(2), 8, H - 20);
+	ctxBola.fillText("ay: " + num(acc.y).toFixed(2), 8, H - 7);
 }
 
 function pintarParticulas(acc) {
@@ -298,19 +303,19 @@ function pintarParticulas(acc) {
 
 	ctxPart.fillStyle = "#16F24D";
 	ctxPart.beginPath();
-	ctxPart.arc(10, 10, Math.max(1, Math.min(16, Math.abs(acc.z))), 0, 2 * Math.PI);
+	ctxPart.arc(10, 10, Math.max(1, Math.min(16, Math.abs(num(acc.z)))), 0, 2 * Math.PI);
 	ctxPart.fill();
 }
 
 function actualizarLecturas(acc) {
 	var ids = ["val-x", "val-y", "val-z"];
-	var v = [acc.x, acc.y, acc.z];
+	var v = [num(acc.x), num(acc.y), num(acc.z)];
 	for (var i = 0; i < 3; i++) {
 		var n = document.getElementById(ids[i]);
 		if (n) { n.textContent = v[i].toFixed(2); }
 	}
 	var idsR = ["val-alpha", "val-beta", "val-gamma"];
-	var vr = [sensor.alpha, sensor.beta, sensor.gamma];
+	var vr = [num(sensor.alpha), num(sensor.beta), num(sensor.gamma)];
 	for (var j = 0; j < 3; j++) {
 		var r = document.getElementById(idsR[j]);
 		if (r) { r.textContent = vr[j].toFixed(1); }
