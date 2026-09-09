@@ -63,6 +63,7 @@ var muestrasIntervalo = 0;
 var muestrasTotal = 0;
 var fuente = "ninguna";
 var depuracionEl = document.getElementById("depuracion");
+var permisos = { accelerometer: "?", gyroscope: "?", magnetometer: "?" };
 
 function registrarMuestra() {
 	muestrasIntervalo++;
@@ -72,6 +73,18 @@ function registrarMuestra() {
 function toGrados(rad) {
 	return rad * 180 / Math.PI;
 }
+
+function consultarPermisos() {
+	if (!navigator.permissions || !navigator.permissions.query) { return; }
+	["accelerometer", "gyroscope", "magnetometer"].forEach(function (nombre) {
+		try {
+			navigator.permissions.query({ name: nombre }).then(function (st) {
+				permisos[nombre] = st.state;
+			}).catch(function () {});
+		} catch (e) {}
+	});
+}
+consultarPermisos();
 
 window.addEventListener("devicemotion", function (ev) {
 	var acc = ev.accelerationIncludingGravity || ev.acceleration;
@@ -169,6 +182,28 @@ function activarSimulacion() {
 	}, false);
 }
 
+function mostrarEstado() {
+	if (sim.usandoSim) {
+		if (estadoEl) { estadoEl.textContent = "Sin lecturas de sensores: mueve el ratón o el dedo para simular el movimiento."; }
+		return;
+	}
+	if (muestrasTotal > 0 && !sim.usandoSim) {
+		if (estadoEl) { estadoEl.textContent = "Sensores activados. Mueve tu dispositivo."; }
+	}
+}
+
+function asegurarSensores() {
+	if (typeof window.Accelerometer !== "undefined") {
+		iniciarSensoresGenericos();
+	}
+	if (permisos.accelerometer === "granted" || permisos.gyroscope === "granted") {
+		sensor.activo = true;
+		setTimeout(function () {
+			if (muestrasTotal === 0) { activarSimulacion(); }
+		}, 3000);
+	}
+}
+
 function pedirPermiso() {
 	var peticiones = [];
 	if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
@@ -181,14 +216,15 @@ function pedirPermiso() {
 	Promise.all(peticiones).then(function (resultados) {
 		var concedido = resultados.indexOf("denied") === -1;
 		if (concedido) {
-			sensor.activo = true;
-			iniciarSensoresGenericos();
+			consultarPermisos();
+			asegurarSensores();
+			if (estadoEl) { estadoEl.textContent = "Permiso concedido. Esperando lecturas del sensor…"; }
+			if (botonPermiso) { botonPermiso.style.display = "none"; }
 			setTimeout(function () {
 				if (muestrasTotal === 0) { activarSimulacion(); }
 			}, 3000);
-			if (estadoEl) { estadoEl.textContent = "Sensores activados. Mueve tu dispositivo."; }
-			if (botonPermiso) { botonPermiso.style.display = "none"; }
 		} else {
+			if (estadoEl) { estadoEl.textContent = "Permiso denegado: revisa los ajustes del sitio en el navegador."; }
 			if (botonPermiso) { botonPermiso.style.display = "none"; }
 			activarSimulacion();
 		}
@@ -198,21 +234,33 @@ function pedirPermiso() {
 	});
 }
 
-var genericoArrancado = iniciarSensoresGenericos();
 if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
 	if (botonPermiso) {
 		botonPermiso.style.display = "inline-block";
 		botonPermiso.addEventListener("click", pedirPermiso, false);
 	}
-	if (!genericoArrancado && estadoEl) {
-		estadoEl.textContent = "Pulsa el botón para permitir el acelerómetro.";
-	}
 } else {
 	sensor.activo = true;
+	asegurarSensores();
 	setTimeout(function () {
 		if (muestrasTotal === 0) { activarSimulacion(); }
 	}, 3000);
 	if (estadoEl) { estadoEl.textContent = "Sensores activados. Mueve tu dispositivo."; }
+}
+
+if (navigator.permissions && navigator.permissions.query) {
+	["accelerometer", "gyroscope"].forEach(function (nombre) {
+		try {
+			navigator.permissions.query({ name: nombre }).then(function (st) {
+				st.addEventListener("change", function () {
+					permisos[nombre] = st.state;
+					if (st.state === "granted") {
+						asegurarSensores();
+					}
+				});
+			}).catch(function () {});
+		} catch (e) {}
+	});
 }
 
 // ---- Dibujo ----
@@ -281,8 +329,11 @@ function bucle(tiempo) {
 
 	if (tiempo - ultimoSegundo >= 1000) {
 		if (depuracionEl) {
-			var extras = sim.usandoSim ? " · usando simulación" : (sensor.activo ? "" : " · esperando permiso");
-			depuracionEl.textContent = "muestras/s: " + muestrasIntervalo + " · " + fuente + extras;
+			depuracionEl.textContent = "muestras/s: " + muestrasIntervalo +
+				" · fuente: " + fuente +
+				" · accel: " + permisos.accelerometer +
+				" · gyro: " + permisos.gyroscope +
+				(sim.usandoSim ? " · simulación" : "");
 		}
 		muestrasIntervalo = 0;
 		ultimoSegundo = tiempo;
