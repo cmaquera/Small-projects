@@ -38,6 +38,8 @@ function crearParticulas() {
 		particulas.push({
 			x: Math.random() * W,
 			y: Math.random() * H,
+			vx: 0,
+			vy: 0,
 			r: 5 + Math.random() * 20,
 			color: colorAleatorioRgba()
 		});
@@ -49,12 +51,14 @@ function moverParticulas(dt, ax, ay) {
 	var e = Math.min(3, dt / 40);
 	for (var i = 0; i < NUM_PARTICULAS; i++) {
 		var p = particulas[i];
-		p.x += ax * e;
-		p.y += ay * e;
-		if (p.x < 0) { p.x = 0; }
-		if (p.x > W) { p.x = W; }
-		if (p.y < 0) { p.y = 0; }
-		if (p.y > H) { p.y = H; }
+		p.vx = p.vx * Math.pow(0.96, e) + ax * 0.2 * e;
+		p.vy = p.vy * Math.pow(0.96, e) + ay * 0.2 * e;
+		p.x += p.vx * e;
+		p.y += p.vy * e;
+		if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx); }
+		if (p.x > W - p.r) { p.x = W - p.r; p.vx = -Math.abs(p.vx); }
+		if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy); }
+		if (p.y > H - p.r) { p.y = H - p.r; p.vy = -Math.abs(p.vy); }
 	}
 }
 
@@ -89,7 +93,7 @@ consultarPermisos();
 window.addEventListener("devicemotion", function (ev) {
 	var acc = ev.accelerationIncludingGravity || ev.acceleration;
 	if (acc) {
-		sensor.x = acc.x || 0;
+		sensor.x = -(acc.x || 0);
 		sensor.y = acc.y || 0;
 		sensor.z = acc.z || 0;
 		sensor.activo = true;
@@ -118,7 +122,7 @@ function iniciarSensoresGenericos() {
 	try {
 		var acelerometro = new window.Accelerometer({ frequency: 60 });
 		acelerometro.onreading = function () {
-			sensor.x = (acelerometro.x || 0) / 9.80665;
+			sensor.x = -((acelerometro.x || 0) / 9.80665);
 			sensor.y = (acelerometro.y || 0) / 9.80665;
 			sensor.z = (acelerometro.z || 0) / 9.80665;
 			sensor.activo = true;
