@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css?family=Droid+Sans+Mono');
+
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  background-color: #0D0D0D;
+  color: #16F24D;
+  font-family: 'Droid Sans Mono', monospace;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  padding: 0 0 2rem 0;
+  min-height: 100%;
+}
+
+a {
+  color: #16F24D;
+}
+
+h1 {
+  text-align: center;
+  padding: 3px;
+}
+
+/* Marco común */
+.site-header {
+  position: relative;
+  z-index: 10;
+  padding: 1.5rem 1rem .75rem;
+  text-align: center;
+  background: rgba(13,13,13,.8);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: .5rem;
+  font-size: 14px;
+  color: #6DF28E;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.site-footer {
+  position: relative;
+  z-index: 10;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid #16F24D;
+  background: rgba(13,13,13,.9);
+}
+
+.site-footer a {
+  color: #fff;
+}
+
+/* Plantilla base */
+.contenedor {
+  text-align: center;
+  padding-top: 50px;
+}
+
+.contenido {
+  display: inline-block;
+  margin: 1em;
+}
+
+.contenido a img {
+  width: 300px;
+  height: auto;
+  border: inset 8px;
+  display: block;
+}
+
+.contenido a:link, .contenido a:hover, .contenido a:visited, .contenido a:active {
+  text-decoration: none;
+  color: #16F24D;
+}
+
+.btn {
+  background-color: #16F24D;
+  border: none;
+  color: #0D0D0D;
+  text-align: center;
+  text-decoration: none;
+  font-family: 'Droid Sans Mono', monospace;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #055902;
+  color: #6DF28E;
+}
+
+.btn1 {
+  padding: 10px 24px;
+}
+
+#btn-2:focus {
+  background: #055902;
+  color: #6DF28E;
+}
+
+input {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: none;
+  border-bottom: 2px solid #16F24D;
+  font-family: 'Droid Sans Mono', monospace;
+  font-size: 20px;
+}

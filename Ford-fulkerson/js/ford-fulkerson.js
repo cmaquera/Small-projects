@@ -1,16 +1,15 @@
-var c = []; //variable en que se alamcenra la cadena de de caminos desde el nodo funete al no do sumidero
 //CREACION DEL CLASE ARISTA
 var Arista = function(origen, destino, capacidad){
     this.origen = origen;           //Nodo origen
     this.destino = destino;         //Nodo destino
-    this.capacidad = capacidad;     //Capacidad de nodo origen
+    this.capacidad = capacidad;     //Capacidad de la arista
     this.aristaIversa = null;       //La arista inversa al flujo
-    this.flujo = 0;                 //Flujo que llev a la arista
+    this.flujo = 0;                 //Flujo que lleva la arista
 };
 
-//CREACION DE LA CLASE QUE MUESTRA 
+//CREACION DE LA CLASE QUE MUESTRA
 var FlujoRed = function (){
-    this.aristas = {};      //Arreglo de onjetos "Arista"
+    this.aristas = {};      //Arreglo de objetos "Arista"
     this.fuente;            //Variable que almacena el nodo fuente del grafo
 
     //Metodo que busca el camino en la red Residual
@@ -26,7 +25,7 @@ var FlujoRed = function (){
 
     //METODO EN EL QUE SE AGREGAN ARISTAS A LA RED DE FLUJO
     this.agregarArista = function(origen, destino, capacidad, capacidad2){
-        //Si el nodo origen es igual al destino 
+        //Si el nodo origen es igual al destino
         if(origen == destino) return;       //entoces no devolvemos ningun valor y termina el proceso del metodo
 
         var arista, aristaIversa;
@@ -43,15 +42,14 @@ var FlujoRed = function (){
 
         //Agragamos el objeto Arista al Arreglo de el nodo origen
         this.aristas[origen].push(arista);
-        //Agragamos el objeto Arista Inversa al Arreglo de el nodo destino 
+        //Agragamos el objeto Arista Inversa al Arreglo de el nodo destino
         this.aristas[destino].push(aristaIversa);
     };
-
 
     //Metodo que busca aristas dobles por el camino aumetado
     this.buscarCaminoDoble = function(camino, arista){
         for(var i=0; i<camino.length;i++){
-            //si la arista elegia por el camino aumentado es la misma que la anterior pero va en sentido contrario 
+            //si la arista elegia por el camino aumentado es la misma que la anterior pero va en sentido contrario
             if(camino[i][0].aristaIversa == arista || camino[i][0] == arista || arista.destino == this.fuente || camino[i][0].origen == arista.destino){
                 return true; //entonces no se procedera por ese camino
             }
@@ -59,25 +57,24 @@ var FlujoRed = function (){
         return false;   //entonces se procedera por el camino
     };
 
-
     //Buscar los caminos desde el origen hasta el destino
     this.buscarCamino = function(origen, destino, camino){
         //Si el origen y el destino del camino aumentado es el mismo
         if(origen == destino) return camino;    // retorno el camino existente por que no existe mas camino que recorrer
 
+        var salientes = this.aristas[origen] || [];     //aristas que salen del nodo origen (si no tiene, no hay camino)
+        for(var i=0; i<salientes.length;i++){
+            //si la arista elegida para el camino aumentado ya fue usada o es la inversa, se salta
+            if(this.buscarCaminoDoble(camino, salientes[i])) continue;
 
-        for(var i=0; i<this.aristas[origen].length;i++){
-            //si la arista elgida para el camino aumeteado no tiene un camino doble 
-            if(!this.buscarCaminoDoble(camino, this.aristas[origen][i])){
-                var arista = this.aristas[origen][i];               //se el asignara a una variable auxiliar
-                var residual = arista.capacidad - arista.flujo;     //calculara la capacidad residual de la arista existente en el nodo origen de la arista
-            }
+            var arista = salientes[i];                          //se le asignara a una variable auxiliar
+            var residual = arista.capacidad - arista.flujo;     //calculara la capacidad residual de la arista existente en el nodo origen de la arista
 
             //Si aun la arista cuenta con capacidad para agregar flujo y no se encuentra en el camino aumentado
             if(residual > 0 && !this.buscarAristaCamino(camino, arista, residual)){
                 var tcamino = camino.slice(0);          //Unbicamos el Arreglo camino en el elemento inicial
                 tcamino.push([arista, residual]);       //Se agrada al arreglo camino un objeto camino (esto seria parecido a una etiqueta)
-                var resultado = this.buscarCamino(arista.destino,destino, tcamino);     //Buscamos un una arista para el camino aumentado, pero en este caso ya contamos con un camino aterior
+                var resultado = this.buscarCamino(arista.destino,destino, tcamino);     //Buscamos un una arista para el camino aumentado, pero en este caso ya contamos con un camino anterior
                 //Si existe un camino desde el nodo fuente al nodo sumidero
                 if(resultado != null) return resultado;
             }
@@ -88,141 +85,34 @@ var FlujoRed = function (){
 
     //Metodo con la funcion de calcular el flujo maximo de la Red de residual
     this.flujoMaximo = function(origen, destino){
-        this.fuente = origen;       //Asiganos el valor nodo origen como el nodo fuente
-        var camino = this.buscarCamino(origen, destino, []);        //Variable en que se amacenara el Arreglo camino
-        //if(c != null) c.slice(0);
-        //Miesntras el camino exista
+        this.fuente = origen;       //Asigamos el valor nodo origen como el nodo fuente
+        var caminos = [];           //Arreglo con los caminos aumentantes encontrados
+        var camino = this.buscarCamino(origen, destino, []);        //Variable en que se almacenara el Arreglo camino
+        //Miestras el camino exista
         while(camino != null){
-            var flujo = 999999;     //Asiganacion del flujo Maximo
+            var flujo = camino[0][1];   //Inicializamos el flujo con el primer residual del camino
 
             for(var i=0;i<camino.length;i++){
                 //Si la capacidad residual del Arreglo camino es menor que el flujo
                 if(camino[i][1] < flujo){
-                    flujo = camino[i][1];   //entonces se asigana  el valor residual del camino 
-                    console.log('camino ' +i +' : '+ camino[i][1] );        
+                    flujo = camino[i][1];   //entonces se asigna el valor residual del camino
                 }
             }
 
             for(var i=0; i<camino.length;i++){
                 camino[i][0].flujo += flujo;                //el flujo de las aristas del camino se aumenta en la menor capacidad residual
                 camino[i][0].aristaIversa.flujo = -camino[i][0].flujo;
-                //camino[i][0].aristaIversa.flujo -= flujo;   //el flujo de las aristas inversas del camino se disminuye en la menor capacidad residual
-
-                console.log('flujo camino ' + i +' origen: ' + camino[i][0].origen +' destino: ' + camino[i][0].destino);
             }
-            c.push(camino);     //se agrega a la arreglo de de camininos encontrados del nodo funete al nodo sumidero 
+            caminos.push(camino);       //se agrega el camino aumentante encontrado
             camino = this.buscarCamino(origen, destino, []);    //Abuscar el siguiente camino aumentante
         }
 
         var suma = 0; //variable en el que se almacenaran el flujo maximo
+        var salientes = this.aristas[origen] || [];
 
-        for(var i=0; i<this.aristas[origen].length;i++){
-            suma += this.aristas[origen][i].flujo;      //suma de los flujos entrantes al nodo fuente
+        for(var i=0; i<salientes.length;i++){
+            suma += salientes[i].flujo;      //suma de los flujos entrantes al nodo fuente
         }
-        return suma; //retornamos la el flujo maximo del grafo o red
+        return { maximo: suma, caminos: caminos }; //retornamos el flujo maximo del grafo o red
     };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function cuerpo(){
-
-    //document.writeln('<h2>flujo maximo de los nodos A ==> I<h2>');
-    var fn = new FlujoRed();
-   
-    fn.agregarArista('a','b',20,0);
-    fn.agregarArista('a','c',30,0);
-    fn.agregarArista('a','d',10,0);
-    fn.agregarArista('b','e',30,0);
-    fn.agregarArista('b','c',40,0);
-    fn.agregarArista('c','d',10,5);
-    fn.agregarArista('c','e',20,0);
-    fn.agregarArista('d','e',20,0);
-
-
-/*
-    fn.agregarArista('a','b',3,0);
-    fn.agregarArista('a','c',2,4);
-    fn.agregarArista('a','d',2,0);
-    fn.agregarArista('b','c',4,3);
-    fn.agregarArista('b','e',4,3);
-    fn.agregarArista('b','g',4,2);
-    fn.agregarArista('c','d',1,2);
-    fn.agregarArista('c','e',3,0);
-    fn.agregarArista('c','f',4,2);
-    fn.agregarArista('d','f',6,0);
-    fn.agregarArista('d','h',4,2);
-    fn.agregarArista('e','f',3,1);
-    fn.agregarArista('e','g',4,3);
-    fn.agregarArista('e','i',4,0);
-    fn.agregarArista('f','h',4,2);
-    fn.agregarArista('f','i',3,0);
-    fn.agregarArista('g','i',4,0);
-    fn.agregarArista('h','i',3,0);
-*/
-    var max = fn.flujoMaximo('a','e');
-
-    console.log(max);
-   // document.writeln('<h2> Flujo Maximo : ' + max + '</h2>');
-}
-

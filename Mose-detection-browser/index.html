@@ -2,15 +2,25 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Fundamentals</title>
+        <title>Mouse Detection Browser</title>
+        <link rel="stylesheet" href="../shared.css">
         <style type="text/css">
             canvas{
-				position:relative;
+				position:fixed;
+				top:0;
+				left:0;
+				height: 100%;
+				width: 100%;
 			}
         </style>
     </head>
     <body>
-        <canvas id="micanvas" height="400" width="600"> Tu navegador no soporta canvas, por favor Actualizalo</canvas>
+        <header class="site-header">
+            <a class="back-link" href="../index.html">← Volver al índice</a>
+            <h1>Mouse Detection Browser</h1>
+        </header>
+        <canvas id="micanvas"> Tu navegador no soporta canvas, por favor Actualizalo</canvas>
+        <footer class="site-footer">Creado por <a href="https://github.com/cmaquera">CMaquera</a></footer>
         <script type="text/javascript" src="codigo.js"></script>
     </body>
 </html>

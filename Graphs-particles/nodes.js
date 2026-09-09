@@ -1,27 +1,46 @@
 //creacion de la clase grafo
+var RADIO_INFLUENCIA_MOUSE = 120;   //radio en el que el mouse afecta a los nodos
+var FUERZA_REPULSION = 8;           //intensidad con la que el mouse aparta los nodos
+
+var PALETA = ['#16F24D', '#4FC3F7', '#FF6B6B', '#FFD93D', '#B388FF', '#FF8A65', '#4DD8B5', '#F48FB1'];
+
 function Nodo(x, y, radio){
 	this.radio = radio,
 	this.x = x;
 	this.y = y;
 	this.desx = (Math.random(0,1) > 0.5) ? 1 : -1;
 	this.desy = (Math.random(0,1) > 0.5) ? 1 : -1;
+	this.color = PALETA[Math.floor(Math.random() * PALETA.length)];
 }
 
-Nodo.prototype.mover = function(limitex, limitey){
+Nodo.prototype.mover = function(limitex, limitey, mx, my){
 	this.x = this.x + this.desx;
 	this.y = this.y + this.desy;
 
-	if(this.x < 0) this.x = limitex;
-	if(this.y < 0) this.y = limitey;
-	if(this.x > limitex) this.x = 0;
-	if(this.y > limitey) this.y = 0;
+	if(mx !== undefined && my !== undefined){
+		var dx = this.x - mx;
+		var dy = this.y - my;
+		var dist = Math.sqrt(dx*dx + dy*dy);
+		if(dist < RADIO_INFLUENCIA_MOUSE && dist > 0){
+			var fuerza = (RADIO_INFLUENCIA_MOUSE - dist) / RADIO_INFLUENCIA_MOUSE;
+			this.x += (dx/dist) * fuerza * FUERZA_REPULSION;
+			this.y += (dy/dist) * fuerza * FUERZA_REPULSION;
+		}
+	}
+
+	if(this.x < 0){ this.x = 0; this.desx = Math.abs(this.desx); }
+	if(this.y < 0){ this.y = 0; this.desy = Math.abs(this.desy); }
+	if(this.x > limitex){ this.x = limitex; this.desx = -Math.abs(this.desx); }
+	if(this.y > limitey){ this.y = limitey; this.desy = -Math.abs(this.desy); }
 };
 
 Nodo.prototype.dibujar = function(ctx){
 	ctx.beginPath();
 	ctx.arc(this.x, this.y, this.radio, 0, 2*Math.PI);
-	ctx.fillStyle = 'black';
+	ctx.fillStyle = this.color;
 	ctx.fill();
+	ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+	ctx.lineWidth = 1;
 	ctx.stroke();
 };
 
@@ -31,11 +50,14 @@ function Arista(nodoi, nodof){
 }
 
 Arista.prototype.dibujar = function(ctx){
-	ctx.strokeStyle = 'black';
+	ctx.globalAlpha = 0.35;
+	ctx.strokeStyle = this.nodoi.color;
+	ctx.lineWidth = 1;
 	ctx.beginPath();
 	ctx.moveTo(this.nodoi.x,this.nodoi.y);
 	ctx.lineTo(this.nodof.x,this.nodof.y);
 	ctx.stroke();
+	ctx.globalAlpha = 1;
 };
 
 
@@ -116,8 +138,8 @@ Grafo.prototype.inicializar = function(){
 	this.agregarAristas();
 };
 
-Grafo.prototype.moverNodos = function(limitex, limitey){
+Grafo.prototype.moverNodos = function(limitex, limitey, mx, my){
 	for(var i= 0; i< this.listaNodos.length; i++){
-		this.listaNodos[i].mover(limitex, limitey);
+		this.listaNodos[i].mover(limitex, limitey, mx, my);
 	}
 };

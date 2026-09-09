@@ -3,15 +3,13 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Particulas</title>
+		<link rel="stylesheet" href="../shared.css">
 		<style type="text/css">
 			canvas{
 				position:fixed;
 				background: rgba(0,0,0,.45);
 				height: 100%;
 				width: 100%;
-			}
-			body{
-				margin: 0;
 			}
 		</style>
 		<script type="text/javascript">
@@ -30,8 +28,13 @@
 		</script>
 	</head>
 	<body onresize="resize_canvas()">
+		<header class="site-header">
+			<a class="back-link" href="../index.html">← Volver al índice</a>
+			<h1>Particulas JS</h1>
+		</header>
 		<canvas id="micanvas">Tu navegador no puede soportar la tecnologia de canvas, use unaversion mas nueva de su navegador
 		</canvas>
+		<footer class="site-footer">Creado por <a href="https://github.com/cmaquera">CMaquera</a></footer>
 		<script type="text/javascript">
 			var colores = ['','#995C1F', '#B26B24', '#CC7A29', '#E68A2E', '#FF9933', '#FFA347', ''];
 			var canvas = null,

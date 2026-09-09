@@ -1,56 +1,158 @@
-<!DOCTYPE html>	
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8"/>
-		<title>Algoritmo</title>
-		<link rel="stylesheet" type="text/css" href="css/style.css">
+		<title>Ford-Fulkerson Algorithm</title>
+		<link rel="stylesheet" type="text/css" href="../shared.css">
+		<style type="text/css">
+			#formulario0, #formulario1, #formulario2 {
+				position: fixed;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0,0,0,.55);
+				z-index: 20;
+				display: none;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+			}
+			#formulario0 .contenido, #formulario1 .contenido, #formulario2 .contenido {
+				display: block;
+				background: #0D0D0D;
+				border: 2px solid #16F24D;
+				padding: 1.5em;
+				width: 320px;
+				text-align: center;
+			}
+			#formulario0 .campo, #formulario1 .campo, #formulario2 .campo {
+				width: 7em;
+			}
+			.botones {
+				background-color: #16F24D;
+				border: none;
+				color: #0D0D0D;
+				padding: 8px 16px;
+				margin: 4px;
+				cursor: pointer;
+				font-family: 'Droid Sans Mono', monospace;
+				font-size: 14px;
+			}
+			.botones:hover {
+				background: #055902;
+				color: #6DF28E;
+			}
+			.aviso {
+				color: #ffd23e;
+				font-size: 13px;
+				min-height: 15px;
+				margin: .3em 0 0;
+			}
+			#actualizar {
+				width: 50px;
+				height: 50px;
+				position: fixed;
+				filter: invert(100%);
+				top: 0;
+				right: 0;
+				margin: 1em;
+				transition: all .3s;
+			}
+			#actualizar:hover {
+				width: 65px;
+				height: 65px;
+			}
+			#micanvas {
+				border: 5px solid #055902;
+				background-color: #6DF28E;
+				width: 1000px;
+				height: 600px;
+			}
+			#dcanvas {
+				text-align: center;
+				display: block;
+			}
+			.linea {
+				display: inline-block;
+				margin: 10px;
+				text-align: center;
+			}
+			#btn-2:focus, #btn-3:focus {
+				background: #055902;
+				color: #6DF28E;
+			}
+			#resultados {
+				max-width: 1000px;
+				margin: 1em auto 0;
+				padding: .5em 1em;
+				text-align: center;
+				color: #e8eaed;
+			}
+			#resultados h3 {
+				color: #16F24D;
+			}
+			#resultados .camino {
+				display: inline-block;
+				margin: .2em .6em;
+			}
+		</style>
 		<script type="text/javascript" src="js/ford-fulkerson.js"></script>
-		<script type="text/javascript" src="js/app.js""></script>
+		<script type="text/javascript" src="js/app.js"></script>
 	</head>
 	<body>
+		<header class="site-header">
+			<a class="back-link" href="../index.html">← Volver al índice</a>
+			<div id='titulo'><h1>Ford-Fulkerson</h1></div>
+		</header>
 		<img id="actualizar" src="src/reload.svg" onclick="window.location.reload()">
-		<div id='titulo'><h1>Ford-Fulkerson<h1></div>		
 		
-		<form id='formulario0' method="post">
+<form id='formulario0' method="post" onsubmit="return false">
 			<div class='contenido'>
 				<p>Ingrese la Cantidad de Nodos</p>
-				<p>Cantidad de Nodos<input class="campo" name="nodos" id="nodos" type="number" value="0" oninput="validacion('nodos')" required/></p>
-				<input class="botones" id="boton11" type="button" value="Aceptar" onclick="ocultarDialogo('formulario0')"/>
-				<input class="botones" id="boton12"type="button" value="Cancelar" onclick="ocultarDialogo('formulario0')"/>
+				<p>Cantidad de Nodos<input class="campo" name="nodos" id="nodos" type="number" value="" oninput="validacion('nodos')" min="1" max="26" required/></p>
+				<input class="botones" id="boton11" type="button" value="Aceptar" onclick="aceptarNodos()"/>
+				<input class="botones" id="boton12" type="button" value="Cancelar" onclick="ocultarDialogo('formulario0')"/>
+				<p class="aviso" id="aviso0"></p>
 			</div>
 		</form>
 
-		<form id='formulario1' method="post">
+		<form id='formulario1' method="post" onsubmit="return false">
 			<div class='contenido'>
 				<p>Ingrese las Capacidades</p>
-				<p>Ni - Nf <input class="campo" name="capacidad1" type="number" value="0" oninput="validacion('capacidad1')" required/></p>
-				<p>Nf - Ni <input class="campo" mane="capacidad2" type="number" value="0" oninput="validacion('capacidad2')" required/></p>
-				<input class="botones" type="submit" value="Aceptar" onclick="alert('hola')"/>
-				<input class="botones" type="button" value="Cancelar"/>
+				<p>Ni - Nf <input class="campo" name="capacidad1" id="capacidad1" type="number" value="" oninput="validacion('capacidad1')" min="0" required/></p>
+				<p>Nf - Ni <input class="campo" name="capacidad2" id="capacidad2" type="number" value="" oninput="validacion('capacidad2')" min="0" required/></p>
+				<input class="botones" type="button" value="Aceptar" onclick="aceptarCapacidades()"/>
+				<input class="botones" type="button" value="Cancelar" onclick="cancelarCapacidades()"/>
+				<p class="aviso" id="aviso1"></p>
 			</div>
 		</form>
 		
 		<form id='formulario2' method="post">
 			<div class='contenido'>
 				<p>Calcular el Flujo Maximo</p>
-				<p>Fuente   -    Sumidero</p>
+				<p>Fuente   -   Sumidero</p>
 				<input class="campo" name="fuente" id="fuente" type="text" placeholder="nodo del grafo" oninput="validacion('fuente')" required pattern="([a-z]{1})" maxlength="1"/>
 				<input class="campo" name="sumidero" id="sumidero" type="text" placeholder="nodo del grafo" oninput="validacion('sumidero')" required pattern="([a-z]{1})" maxlength="1"/></br>
-				<input class="botones" type="submit" value="Aceptar"/>
-				<input class="botones" type="button" value="Cancelar"/>
+				<input class="botones" type="button" value="Aceptar" onclick="aceptarFuenteSumidero()"/>
+				<input class="botones" type="button" value="Cancelar" onclick="ocultarDialogo('formulario2')"/>
+				<p class="aviso" id="aviso2"></p>
 			</div>
 		</form>
 
 		<div></div>
 		<div id='dcanvas'>
-			<canvas id="micanvas" height='600' whidth='1000'></canvas>
+			<canvas id="micanvas" height='600' width='1000'></canvas>
 
 			<div id="botones">
 				<div class="linea"><button class="btn btn1" type="button" onclick="pregunta1()">AGREGAR NODOS</button></div>
 				<div class="linea"><button class="btn btn1" type="button" id="btn-2" onclick="pregunta2()">AGREGAR CAMINOS</button></div>
 				<div class="linea"><button class="btn btn1" type="button" onclick="pregunta3()">CALCULAR FLUJO MAXIMO</button></div>
+				<div class="linea"><button class="btn btn1" type="button" id="btn-3" onclick="preguntaBorrar()">BORRAR</button></div>
+				<div class="linea"><button class="btn btn1" type="button" onclick="resetGrafo()">REINICIAR</button></div>
 			</div>
 		</div>
-		 <div class="footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></div>
+		<div id='resultados'></div>
+		<footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
 	</body>
 </html>

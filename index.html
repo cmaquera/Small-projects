@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Projects Index</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f6f8;
+    --text: #1f2430;
+    --muted: #5a6270;
+    --card-bg: #fff;
+    --card-border: #e2e5ea;
+    --card-shadow: rgba(0,0,0,0.08);
+  }
+  [data-theme="dark"] {
+    --bg: #14161c;
+    --text: #e8eaed;
+    --muted: #9aa1ad;
+    --card-bg: #1d2129;
+    --card-border: #2e3540;
+    --card-shadow: rgba(0,0,0,0.5);
+  }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 24px;
+    line-height: 1.5;
+  }
+  header { max-width: 1000px; margin: 0 auto 32px; position: relative; }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { color: var(--muted); }
+  .theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .theme-toggle:hover { box-shadow: 0 2px 8px var(--card-shadow); }
+  main { max-width: 1000px; margin: 0 auto; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    display: block;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .card:hover { box-shadow: 0 4px 16px var(--card-shadow); transform: translateY(-2px); }
+  .card h2 { font-size: 17px; margin-bottom: 6px; color: var(--text); }
+  .card p { font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mini Projects</h1>
+  <p>A collection of small JavaScript experiments and tools. Click a project to open it.</p>
+  <button class="theme-toggle" id="theme-toggle" type="button">Dark</button>
+</header>
+<main>
+  <div class="grid" id="projects"></div>
+</main>
+<script>
+  const toggle = document.getElementById("theme-toggle");
+  const getStoredTheme = () => {
+    try { return localStorage.getItem("theme"); } catch (e) { return null; }
+  };
+  const setStoredTheme = (t) => {
+    try { localStorage.setItem("theme", t); } catch (e) {}
+  };
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    toggle.textContent = theme === "dark" ? "Light" : "Dark";
+  };
+  applyTheme(getStoredTheme() === "dark" ? "dark" : "light");
+
+  toggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    setStoredTheme(next);
+    applyTheme(next);
+  });
+
+  const projects = [
+    { name: "Box2D Esferas", desc: "Physics simulation of spheres using the Box2D engine.", link: "./Box2D-esferas/index.html" },
+    { name: "Ford-Fulkerson", desc: "Interactive visualization of the Ford-Fulkerson max-flow algorithm.", link: "./Ford-fulkerson/index.html" },
+    { name: "Formularios PHP Ajax", desc: "Example of HTML forms handled with PHP and AJAX.", link: "./Formularios-PHP-Ajax/index.html" },
+    { name: "Graphs Particles", desc: "Canvas experiment with particles connected by graph links.", link: "./Graphs-particles/index.html" },
+    { name: "Mose Detection Browser", desc: "Face/mouth detection running in the browser.", link: "./Mose-detection-browser/index.html" },
+    { name: "Motion Detection Browser", desc: "Browser-based motion detection using the camera.", link: "./Motion-detection-browser/index.html" },
+    { name: "Particulas JS", desc: "Canvas particle effects in plain JavaScript.", link: "./Particulas-JS/index.html" },
+    { name: "Platformer Game Phaser", desc: "A 2D platformer built with the Phaser framework.", link: "./Platformer-game-phaser/index.html" },
+    { name: "Touch Detection Browser", desc: "Browser-based touch detection experiment.", link: "./Touch-detection-browser/index.html" }
+  ];
+
+  const grid = document.getElementById("projects");
+  projects.forEach(p => {
+    const card = document.createElement("a");
+    card.className = "card";
+    card.href = p.link;
+    const title = document.createElement("h2");
+    title.textContent = p.name;
+    const desc = document.createElement("p");
+    desc.textContent = p.desc;
+    card.appendChild(title);
+    card.appendChild(desc);
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>
