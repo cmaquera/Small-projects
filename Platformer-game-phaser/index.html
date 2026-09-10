@@ -9,14 +9,66 @@
 	<style type="text/css">
 		.juego {
 			display: flex;
-			justify-content: center;
+			flex-direction: column;
+			align-items: center;
 			padding: 1rem .5rem 0;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.hud {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 1rem;
+			width: 100%;
+			max-width: 500px;
+			box-sizing: border-box;
+			padding: .4rem .75rem;
+			margin-bottom: .5rem;
+			background: rgba(13,13,13,.55);
+			border: 2px solid #16F24D;
+			border-radius: 8px;
+			font-family: 'Droid Sans Mono', monospace;
+		}
+		.hud .marcador {
+			color: #6DF28E;
+			font-weight: bold;
+			font-size: 14px;
+		}
+		.hud .ayuda {
+			color: #16F24D;
+			font-size: 11px;
 		}
 		.juego canvas {
 			border: 2px solid #16F24D;
 			border-radius: 8px;
 			max-width: 100%;
 			height: auto;
+			display: block;
+		}
+		.victoria {
+			display: none;
+			position: fixed;
+			inset: 0;
+			z-index: 20;
+			align-items: center;
+			justify-content: center;
+			background: rgba(13,13,13,.85);
+			font-family: 'Droid Sans Mono', monospace;
+			text-align: center;
+		}
+		.victoria.visible {
+			display: flex;
+		}
+		.victoria .mensaje {
+			color: #16F24D;
+			font-size: 26px;
+			font-weight: bold;
+		}
+		.victoria .sub {
+			color: #6DF28E;
+			font-size: 14px;
+			margin-top: .5rem;
 		}
 		.controles {
 			text-align: center;
@@ -24,11 +76,14 @@
 		}
 		.controles .btn {
 			margin: 4px 6px;
-			font-size: 20px;
-			min-width: 60px;
+			font-size: 24px;
+			min-width: 64px;
+			min-height: 56px;
 			-webkit-user-select: none;
 			user-select: none;
+			-webkit-touch-callout: none;
 			touch-action: manipulation;
+			line-height: 1.2;
 		}
 	</style>
 </head>
@@ -37,7 +92,18 @@
 		<a class="back-link" href="../index.html">← Volver al índice</a>
 		<h1>Juego con Phaser</h1>
 	</header>
-	<div id="game" class="juego"></div>
+	<div id="game" class="juego">
+		<div class="hud">
+			<span class="marcador" id="marcador">Monedas: 0/0</span>
+			<span class="ayuda">← → mover · ↑/ESP saltar</span>
+		</div>
+	</div>
+	<div class="victoria" id="victoria">
+		<div>
+			<div class="mensaje">¡GANASTE!</div>
+			<div class="sub">Pulsa R o el botón Reiniciar</div>
+		</div>
+	</div>
 	<div class="controles">
 		<button class="btn btn1" id="btn-izq" type="button">◀</button>
 		<button class="btn btn1" id="btn-der" type="button">▶</button>
@@ -76,14 +142,14 @@
 			create: function () {
 				game.stage.backgroundColor = "#12202b";
 				game.physics.startSystem(Phaser.Physics.ARCADE);
-				game.world.enableBody = true;
 
 				this.cursor = game.input.keyboard.createCursorKeys();
 				this.espacio = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 				this.teclaR = game.input.keyboard.addKey(Phaser.Keyboard.R);
 
 				this.player = game.add.sprite(70, 100, 'player');
-				this.player.body.gravity.y = 420;
+				game.physics.arcade.enable(this.player);
+				this.player.body.gravity.y = 700;
 				this.player.body.collideWorldBounds = true;
 
 				this.walls = game.add.group();
@@ -93,14 +159,19 @@
 				this.monedas = 0;
 				this.totalMonedas = 0;
 				this.ganado = false;
+				this.saltoPendiente = false;
+				this.saltoAnterior = false;
+				this.ultimaTierra = -999;
+				this.pendienteDesde = 0;
+				this.saltoUsado = false;
 
 				var level = [
 					'xxxxxxxxxxxxxxxxxxxxxx',
-					'!     o          o   x',
-					'!   o  x!  !        x',
-					'!      x           o x',
-					'!   x     xx   o     x',
-					'!  o x     x   !     x',
+					'x     o          o   x',
+					'x   o  x             x',
+					'x      x           o x',
+					'x    x     xx   o   Xx',
+					'x  o x     x   !     x',
 					'xxxxxxxxxxxxxxxxxxxxxx'
 				];
 
@@ -111,30 +182,29 @@
 						var py = 30 + 20 * i;
 						if (c === 'x') {
 							var wall = game.add.sprite(px, py, 'wall');
-							this.walls.add(wall);
+							game.physics.arcade.enable(wall);
 							wall.body.immovable = true;
+							this.walls.add(wall);
 						} else if (c === 'o') {
 							var coin = game.add.sprite(px, py, 'coin');
+							game.physics.arcade.enable(coin);
 							this.coins.add(coin);
 							this.totalMonedas++;
 						} else if (c === '!') {
 							var enemy = game.add.sprite(px, py, 'enemy');
-							this.enemies.add(enemy);
-							enemy.body.gravity.y = 420;
+							game.physics.arcade.enable(enemy);
+							enemy.body.gravity.y = 700;
 							enemy.body.collideWorldBounds = true;
 							enemy.body.velocity.x = j % 2 === 0 ? 60 : -60;
+							this.enemies.add(enemy);
 						}
 					}
 				}
 
-				this.textoMarcador = game.add.text(10, 6, 'Monedas: 0/' + this.totalMonedas,
-					{ font: "16px 'Droid Sans Mono', monospace", fill: '#6DF28E' });
-				this.textoAyuda = game.add.text(10, 28,
-					'← → / A D moverse    ↑ / ESPACIO saltar',
-					{ font: "12px 'Droid Sans Mono', monospace", fill: '#16F24D' });
-				this.textoEstado = game.add.text(250, 90, '',
-					{ font: "20px 'Droid Sans Mono', monospace", fill: '#fff' });
-				this.textoEstado.anchor.setTo(0.5);
+				this.marcadorDOM = document.getElementById('marcador');
+				this.marcadorDOM.textContent = 'Monedas: 0/' + this.totalMonedas;
+				this.victoriaDOM = document.getElementById('victoria');
+				this.victoriaDOM.className = 'victoria';
 			},
 
 			update: function () {
@@ -147,7 +217,6 @@
 
 				var izquierda = this.cursor.left.isDown || controles.izq;
 				var derecha = this.cursor.right.isDown || controles.der;
-				var salto = this.cursor.up.isDown || this.espacio.isDown || controles.salto;
 
 				if (izquierda) {
 					this.player.body.velocity.x = -160;
@@ -159,17 +228,35 @@
 					this.player.body.velocity.x = 0;
 				}
 
-				if (salto && this.player.body.onFloor()) {
-					this.player.body.velocity.y = -230;
+				game.physics.arcade.collide(this.player, this.walls);
+				game.physics.arcade.collide(this.enemies, this.walls, function (enemy, wall) {
+					if (enemy.body.blocked.left || enemy.body.touching.left) { enemy.body.velocity.x = 60; }
+					else if (enemy.body.blocked.right || enemy.body.touching.right) { enemy.body.velocity.x = -60; }
+				});
+
+				var enSuelo = this.player.body.onFloor() || this.player.body.blocked.down || this.player.body.touching.down;
+				if (enSuelo) {
+					this.ultimaTierra = game.time.now;
+					this.saltoUsado = false;
 				}
 
-				game.physics.arcade.collide(this.player, this.walls);
-				game.physics.arcade.collide(this.enemies, this.walls);
+				var saltoPresionado = this.cursor.up.isDown || this.espacio.isDown || controles.salto;
+				if (saltoPresionado && !this.saltoAnterior) {
+					this.saltoPendiente = true;
+					this.pendienteDesde = game.time.now;
+				}
+				this.saltoAnterior = saltoPresionado;
+				if (this.saltoPendiente && game.time.now - this.pendienteDesde > 200) {
+					this.saltoPendiente = false;
+				}
 
-				for (var i = 0; i < this.enemies.length; i++) {
-					var e = this.enemies.children[i];
-					if (e.body.blocked.left) { e.body.velocity.x = 60; }
-					else if (e.body.blocked.right) { e.body.velocity.x = -60; }
+				var enCoyote = !enSuelo && (game.time.now - this.ultimaTierra <= 120);
+				var puedeSaltar = (enSuelo || enCoyote) && !this.saltoUsado;
+
+				if (this.saltoPendiente && puedeSaltar) {
+					this.player.body.velocity.y = -300;
+					this.saltoPendiente = false;
+					this.saltoUsado = true;
 				}
 
 				game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this);
@@ -183,19 +270,20 @@
 			takeCoin: function (player, coin) {
 				coin.kill();
 				this.monedas++;
-				this.textoMarcador.setText('Monedas: ' + this.monedas + '/' + this.totalMonedas);
+				this.marcadorDOM.textContent = 'Monedas: ' + this.monedas + '/' + this.totalMonedas;
 				if (this.monedas >= this.totalMonedas) {
 					this.ganado = true;
-					this.textoEstado.setText('¡GANASTE!\npulsa R o el botón Reiniciar');
+					this.victoriaDOM.className = 'victoria visible';
 				}
 			},
 
 			morir: function () {
+				if (this.ganado) { return; }
 				game.state.start('main');
 			}
 		};
 
-		var game = new Phaser.Game(500, 210, Phaser.AUTO, 'game');
+		var game = new Phaser.Game(500, 210, Phaser.CANVAS, 'game');
 		game.state.add('main', mainState);
 		game.state.start('main');
 

@@ -1,188 +1,202 @@
-(function () {
+﻿(function () {
 	'use strict';
-	window.addEventListener('load', inicializacion, false);
-	window.addEventListener('resize', cambiarTamaño, false);
+	var canvas = null,
+		ctx = null,
+		W = 0,
+		H = 0,
+		toques = [],
+		colores = ['#16F24D', '#6DF28E', '#00E5FF', '#FFD600', '#FF4081', '#B388FF'],
+		accento = '#16F24D';
 
-	var canvas = null, contexto = null;
-	var anchoLogico = 0, altoLogico = 0;
-	var toques = [];
-	var colores = ['#16F24D', '#6DF28E', '#00E5FF', '#FFD600', '#FF4081', '#B388FF'];
-
-	function inicializacion() {
+	function init() {
 		canvas = document.getElementById('canvas');
-		contexto = canvas.getContext('2d');
-		cambiarTamaño();
+		ctx = canvas.getContext('2d');
+		resize();
+		window.addEventListener('resize', resize, false);
 		habilitarEntradas();
-		correr();
+		pintar();
 	}
 
-	function cambiarTamaño() {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
-		anchoLogico = canvas.width;
-		altoLogico = canvas.height;
+	function resize() {
+		W = canvas.width = window.innerWidth;
+		H = canvas.height = window.innerHeight;
+		pintar();
 	}
 
-	function correr() {
-		requestAnimationFrame(correr);
-		pintar(contexto);
-	}
-
-	function coordenadas(e) {
+	function getPos(e) {
 		var rect = canvas.getBoundingClientRect();
 		return {
-			x: (e.clientX - rect.left) * (anchoLogico / rect.width),
-			y: (e.clientY - rect.top) * (altoLogico / rect.height)
+			x: (e.clientX - rect.left) * (W / rect.width),
+			y: (e.clientY - rect.top) * (H / rect.height)
 		};
 	}
 
-	function pintar(c) {
-		c.fillStyle = '#0D0D0D';
-		c.fillRect(0, 0, anchoLogico, altoLogico);
+	function pintar() {
+		if (!ctx) { return; }
 
-		c.strokeStyle = 'rgba(22,242,77,0.10)';
-		c.lineWidth = 1;
-		var paso = 40;
-		for (var gx = paso; gx < anchoLogico; gx += paso) {
-			c.beginPath();
-			c.moveTo(gx + 0.5, 0);
-			c.lineTo(gx + 0.5, altoLogico);
-			c.stroke();
+		ctx.fillStyle = '#0D0D0D';
+		ctx.fillRect(0, 0, W, H);
+
+		ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		for (var x = 0; x < W; x += 40) {
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, H);
 		}
-		for (var gy = paso; gy < altoLogico; gy += paso) {
-			c.beginPath();
-			c.moveTo(0, gy + 0.5);
-			c.lineTo(anchoLogico, gy + 0.5);
-			c.stroke();
+		for (var y = 0; y < H; y += 40) {
+			ctx.moveTo(0, y);
+			ctx.lineTo(W, y);
 		}
+		ctx.stroke();
 
-		c.strokeStyle = 'rgba(22,242,77,0.25)';
-		c.beginPath();
-		c.moveTo(anchoLogico / 2, 0);
-		c.lineTo(anchoLogico / 2, altoLogico);
-		c.stroke();
-		c.beginPath();
-		c.moveTo(0, altoLogico / 2);
-		c.lineTo(anchoLogico, altoLogico / 2);
-		c.stroke();
+		ctx.strokeStyle = 'rgba(22,242,77,0.15)';
+		ctx.beginPath();
+		ctx.moveTo(W / 2, 0);
+		ctx.lineTo(W / 2, H);
+		ctx.moveTo(0, H / 2);
+		ctx.lineTo(W, H / 2);
+		ctx.stroke();
 
-		c.fillStyle = 'rgba(255,255,255,0.9)';
-		c.font = "14px 'Droid Sans Mono', monospace";
 		var activos = 0;
 		for (var i = 0; i < toques.length; i++) {
-			if (toques[i]) {
-				activos++;
-				var t = toques[i];
-				var color = colores[i % colores.length];
+			if (!toques[i]) { continue; }
+			activos++;
+			var t = toques[i];
+			var color = colores[i % colores.length];
 
-				c.strokeStyle = color;
-				c.lineWidth = 2;
-				c.beginPath();
-				c.arc(t.x, t.y, 22, 0, 2 * Math.PI);
-				c.stroke();
+			ctx.strokeStyle = 'rgba' + colorA(color, 0.25);
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(t.x, 0);
+			ctx.lineTo(t.x, H);
+			ctx.moveTo(0, t.y);
+			ctx.lineTo(W, t.y);
+			ctx.stroke();
 
-				c.fillStyle = color;
-				c.beginPath();
-				c.arc(t.x, t.y, 5, 0, 2 * Math.PI);
-				c.fill();
+			ctx.strokeStyle = color;
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.arc(t.x, t.y, 16, 0, 2 * Math.PI);
+			ctx.stroke();
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.arc(t.x, t.y, 4, 0, 2 * Math.PI);
+			ctx.fill();
 
-				c.strokeStyle = 'rgba(255,255,255,0.35)';
-				c.lineWidth = 1;
-				c.beginPath();
-				c.moveTo(t.x - 32, t.y);
-				c.lineTo(t.x + 32, t.y);
-				c.stroke();
-				c.beginPath();
-				c.moveTo(t.x, t.y - 32);
-				c.lineTo(t.x, t.y + 32);
-				c.stroke();
+			ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(t.x - 16, t.y); ctx.lineTo(t.x + 16, t.y);
+			ctx.moveTo(t.x, t.y - 16); ctx.lineTo(t.x, t.y + 16);
+			ctx.stroke();
 
-				c.fillStyle = color;
-				c.font = "12px 'Droid Sans Mono', monospace";
-				c.textAlign = 'left';
-				c.fillText('dedo ' + i, t.x + 8, t.y - 26);
-			}
+			ctx.fillStyle = color;
+			ctx.font = 'bold 12px "Droid Sans Mono", monospace';
+			ctx.textAlign = 'left';
+			ctx.fillText('dedo ' + i, Math.min(t.x + 20, W - 90), Math.max(t.y - 22, 16));
 		}
 
-		c.textAlign = 'left';
-		c.fillStyle = 'rgba(109,242,142,0.9)';
-		c.font = "14px 'Droid Sans Mono', monospace";
-		c.fillText('Toques: ' + activos, 12, 26);
+		ctx.textAlign = 'left';
+		ctx.font = '13px "Droid Sans Mono", monospace';
+		ctx.fillStyle = '#6DF28E';
+		ctx.fillText('Toca la pantalla con uno o varios dedos', 16, 134);
 
-		c.fillStyle = 'rgba(255,255,255,0.35)';
-		c.font = "12px 'Droid Sans Mono', monospace";
-		var linea = 44;
+		var anchoPanel = Math.min(360, W - 32);
+		var altoPanel = 12 + 26 + 8 + 16 * activos + 10;
+		var py0 = Math.max(H - altoPanel - 16, 150);
+		ctx.fillStyle = 'rgba(0,0,0,0.78)';
+		ctx.fillRect(16, py0, anchoPanel, altoPanel);
+		ctx.strokeStyle = accento;
+		ctx.lineWidth = 2;
+		ctx.strokeRect(16, py0, anchoPanel, altoPanel);
+
+		ctx.font = 'bold 18px "Droid Sans Mono", monospace';
+		ctx.fillStyle = accento;
+		ctx.fillText('Toques: ' + activos, 30, py0 + 26);
+
+		ctx.font = '13px "Droid Sans Mono", monospace';
+		var linea = py0 + 48;
 		for (var j = 0; j < toques.length; j++) {
-			if (toques[j]) {
-				var t2 = toques[j];
-				var cx = (t2.x / anchoLogico * 100).toFixed(0);
-				var cy = (t2.y / altoLogico * 100).toFixed(0);
-				c.fillText('#' + j + '  X:' + Math.round(t2.x) + ' (' + cx + '%)  Y:' + Math.round(t2.y) + ' (' + cy + '%)', 12, linea);
-				linea += 16;
-			}
+			if (!toques[j]) { continue; }
+			var t2 = toques[j];
+			var pctX = (t2.x / W * 100).toFixed(1);
+			var pctY = (t2.y / H * 100).toFixed(1);
+			ctx.fillStyle = colores[j % colores.length];
+			ctx.fillText('#' + j + '  X:' + Math.round(t2.x) + ' Y:' + Math.round(t2.y) + '  (' + pctX + '%, ' + pctY + '%)', 30, linea);
+			linea += 16;
 		}
+		ctx.textAlign = 'left';
+	}
+
+	function colorA(c, a) {
+		var r = parseInt(c.slice(1, 3), 16),
+			g = parseInt(c.slice(3, 5), 16),
+			b = parseInt(c.slice(5, 7), 16);
+		return '(' + r + ',' + g + ',' + b + ',' + a + ')';
 	}
 
 	function habilitarEntradas() {
 		canvas.addEventListener('touchstart', function (evento) {
 			evento.preventDefault();
-			var toque = evento.changedTouches;
-			for (var i = 0; i < toque.length; i++) {
-				var c = coordenadas(toque[i]);
-				toques[toque[i].identifier % 100] = { x: c.x, y: c.y };
+			var ts = evento.changedTouches;
+			for (var i = 0; i < ts.length; i++) {
+				var c = getPos(ts[i]);
+				toques[ts[i].identifier % 100] = { x: c.x, y: c.y };
 			}
+			pintar();
 		}, { passive: false });
-
-		canvas.addEventListener('touchend', function (evento) {
-			var toque = evento.changedTouches;
-			for (var i = 0; i < toque.length; i++) {
-				toques[toque[i].identifier % 100] = null;
-			}
-		}, false);
-
-		canvas.addEventListener('touchcancel', function (evento) {
-			var toque = evento.changedTouches;
-			for (var i = 0; i < toque.length; i++) {
-				toques[toque[i].identifier % 100] = null;
-			}
-		}, false);
 
 		canvas.addEventListener('touchmove', function (evento) {
 			evento.preventDefault();
-			var toque = evento.changedTouches;
-			for (var i = 0; i < toque.length; i++) {
-				var t = toques[toque[i].identifier % 100];
-				if (t) {
-					var c = coordenadas(toque[i]);
-					t.x = c.x;
-					t.y = c.y;
+			var ts = evento.changedTouches;
+			for (var i = 0; i < ts.length; i++) {
+				var tj = toques[ts[i].identifier % 100];
+				if (tj) {
+					var cc = getPos(ts[i]);
+					tj.x = cc.x;
+					tj.y = cc.y;
 				}
 			}
+			pintar();
 		}, { passive: false });
 
+		canvas.addEventListener('touchend', function (evento) {
+			var ts = evento.changedTouches;
+			for (var i = 0; i < ts.length; i++) {
+				toques[ts[i].identifier % 100] = null;
+			}
+			pintar();
+		}, false);
+
+		canvas.addEventListener('touchcancel', function (evento) {
+			var ts = evento.changedTouches;
+			for (var i = 0; i < ts.length; i++) {
+				toques[ts[i].identifier % 100] = null;
+			}
+			pintar();
+		}, false);
+
 		canvas.addEventListener('mousedown', function (evento) {
-			evento.preventDefault();
-			var c = coordenadas(evento);
+			var c = getPos(evento);
 			toques[0] = { x: c.x, y: c.y };
+			pintar();
 		}, false);
 
 		document.addEventListener('mousemove', function (evento) {
 			if (toques[0]) {
-				var c = coordenadas(evento);
+				var c = getPos(evento);
 				toques[0].x = c.x;
 				toques[0].y = c.y;
+				pintar();
 			}
 		}, false);
 
 		document.addEventListener('mouseup', function () {
 			toques[0] = null;
+			pintar();
 		}, false);
 	}
 
-	window.requestAnimationFrame = (function () {
-		return window.requestAnimationFrame ||
-			window.webkitRequestAnimationFrame ||
-			window.mozRequestAnimationFrame ||
-			function (callback) { window.setTimeout(callback, 17); };
-	})();
+	window.addEventListener('load', init, false);
 })();
