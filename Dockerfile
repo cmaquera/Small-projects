@@ -20,7 +20,7 @@ EXPOSE 8000
 
 # Verificación de salud del contenedor para Dokploy/Docker
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8000}/health || exit 1
 
 # Iniciar servidor gateway unificado
 CMD ["npm", "start"]
