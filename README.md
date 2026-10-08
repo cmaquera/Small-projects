@@ -2,7 +2,8 @@
 
 > Colección interactiva de mini proyectos web, experimentos visuales en Canvas 2D, motores de física, algoritmos de grafos, juegos multijugador en tiempo real con WebSockets y soporte completo para Docker y Dokploy.
 
-Desarrollado y mantenido por **[Cesar Maquera (CMaquera)](https://github.com/cmaquera)**.
+🌐 **Sitio Web en Vivo:** [https://small-projects.cmaquera.com/](https://small-projects.cmaquera.com/)  
+👤 Desarrollado y mantenido por **[Cesar Maquera (CMaquera)](https://github.com/cmaquera)**.
 
 ---
 
