@@ -1,234 +1,225 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Projects Index</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #f5f6f8;
-    --text: #1f2430;
-    --muted: #5a6270;
-    --card-bg: #fff;
-    --card-border: #e2e5ea;
-    --card-shadow: rgba(0,0,0,0.08);
-    --accent: #058f27;
-    --tag-bg: rgba(5, 143, 39, 0.08);
-  }
-  [data-theme="dark"] {
-    --bg: #0D0D0D;
-    --text: #e8eaed;
-    --muted: #9aa1ad;
-    --card-bg: #14161c;
-    --card-border: #22272e;
-    --card-shadow: rgba(0,0,0,0.5);
-    --accent: #16F24D;
-    --tag-bg: rgba(22, 242, 77, 0.1);
-  }
-  body {
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 30px 20px 60px;
-    line-height: 1.5;
-  }
-  header { max-width: 1000px; margin: 0 auto 28px; position: relative; }
-  h1 { font-size: 28px; margin-bottom: 6px; }
-  header p { color: var(--muted); font-size: 15px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Mini Proyectos</title>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .catalog-container {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 1rem 1rem 3rem;
+        }
 
-  .header-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-top: 16px;
-    flex-wrap: wrap;
-  }
-  .search-input {
-    flex: 1;
-    min-width: 220px;
-    padding: 9px 14px;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid var(--card-border);
-    background: var(--card-bg);
-    color: var(--text);
-    outline: none;
-  }
-  .search-input:focus {
-    border-color: var(--accent);
-  }
-  .theme-toggle {
-    padding: 9px 16px;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid var(--card-border);
-    background: var(--card-bg);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .theme-toggle:hover { box-shadow: 0 2px 8px var(--card-shadow); }
+        .site-sub {
+            color: #6DF28E;
+            font-size: 14px;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
 
-  main { max-width: 1000px; margin: 0 auto; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-  .card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 10px;
-    padding: 18px;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
-  }
-  .card:hover {
-    box-shadow: 0 4px 16px var(--card-shadow);
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
-  .card h2 { font-size: 17px; margin-bottom: 6px; color: var(--text); }
-  .card p { font-size: 14px; color: var(--muted); flex-grow: 1; margin-bottom: 12px; }
+        .search-wrap {
+            max-width: 600px;
+            margin: 1.25rem auto 0;
+            position: relative;
+        }
 
-  .card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .tag {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: var(--tag-bg);
-    color: var(--accent);
-    border: 1px solid rgba(22, 242, 77, 0.25);
-    font-family: monospace;
-  }
+        .search-wrap input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #16F24D;
+            border-radius: 6px;
+            color: #16F24D;
+            font-family: 'Droid Sans Mono', monospace;
+            font-size: 14px;
+            padding: 10px 14px;
+            outline: none;
+            box-shadow: 0 0 10px rgba(22, 242, 77, 0.1);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
 
-  footer.site-footer {
-    max-width: 1000px;
-    margin: 40px auto 0;
-    padding: 16px;
-    text-align: center;
-    border-top: 1px solid var(--card-border);
-    color: var(--muted);
-    font-size: 13px;
-  }
-  footer.site-footer a {
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: bold;
-  }
-  footer.site-footer a:hover {
-    text-decoration: underline;
-  }
-</style>
+        .search-wrap input::placeholder {
+            color: #5a6270;
+        }
+
+        .search-wrap input:focus {
+            box-shadow: 0 0 16px rgba(22, 242, 77, 0.35);
+            border-color: #6DF28E;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 16px;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: rgba(13, 13, 13, 0.85);
+            border: 1px solid rgba(22, 242, 77, 0.35);
+            border-radius: 8px;
+            padding: 16px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: #16F24D;
+            box-shadow: 0 0 18px rgba(22, 242, 77, 0.25);
+            text-decoration: none;
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: #16F24D;
+            margin-bottom: 8px;
+            text-align: left;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card p {
+            font-size: 13px;
+            color: #9aa1ad;
+            flex-grow: 1;
+            margin-bottom: 14px;
+            line-height: 1.45;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(22, 242, 77, 0.08);
+            color: #6DF28E;
+            border: 1px solid rgba(22, 242, 77, 0.3);
+            font-family: 'Droid Sans Mono', monospace;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            color: #16F24D;
+            font-size: 12px;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(22, 242, 77, 0.2);
+        }
+
+        .empty-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #9aa1ad;
+            padding: 3rem 1rem;
+            border: 1px dashed rgba(22, 242, 77, 0.3);
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-<header>
-  <h1>Mini Projects</h1>
-  <p>Colección de experimentos interactivos, juegos 2D, física, sensores y herramientas web.</p>
-  <div class="header-actions">
-    <input class="search-input" id="search" type="search" placeholder="Buscar proyecto (ej. canvas, juego, sockets)...">
-    <button class="theme-toggle" id="theme-toggle" type="button">Dark</button>
-  </div>
-</header>
-<main>
-  <div class="grid" id="projects"></div>
-</main>
-<footer class="site-footer">
-  Creado por <a href="https://github.com/cmaquera" target="_blank" rel="noopener">CMaquera</a>
-</footer>
-<script>
-  const toggle = document.getElementById("theme-toggle");
-  const getStoredTheme = () => {
-    try { return localStorage.getItem("theme"); } catch (e) { return null; }
-  };
-  const setStoredTheme = (t) => {
-    try { localStorage.setItem("theme", t); } catch (e) {}
-  };
-  const applyTheme = (theme) => {
-    document.documentElement.dataset.theme = theme;
-    toggle.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
-  };
-  applyTheme(getStoredTheme() === "dark" ? "dark" : "light");
+    <header class="site-header">
+        <h1>Catálogo de Mini Proyectos</h1>
+        <p class="site-sub">Colección de experimentos interactivos, juegos 2D, física, sensores y WebSockets</p>
+        <div class="search-wrap">
+            <input type="search" id="search" placeholder="🔍 Buscar proyecto (ej. canvas, phaser, sockets)..." autocomplete="off">
+        </div>
+    </header>
 
-  toggle.addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    setStoredTheme(next);
-    applyTheme(next);
-  });
+    <main class="catalog-container">
+        <div class="grid" id="projects"></div>
+    </main>
 
-  const projects = [
-    { name: "Box2D Esferas", desc: "Simulación física interactiva de esferas y rebotes usando el motor Box2D.", link: "./Box2D-esferas/index.html", tags: ["Física", "Box2D", "Canvas"] },
-    { name: "Ford-Fulkerson", desc: "Visualizador interactivo del algoritmo de flujo máximo en redes de transporte.", link: "./Ford-fulkerson/index.html", tags: ["Algoritmos", "Grafos", "Canvas"] },
-    { name: "Formularios PHP Ajax", desc: "Procesamiento de formularios HTML con POST tradicional y peticiones asíncronas AJAX (Fetch).", link: "./Formularios-PHP-Ajax/index.html", tags: ["PHP", "AJAX", "Backend"] },
-    { name: "Graphs Particles", desc: "Experimento de red de partículas conectadas dinámicamente según su proximidad.", link: "./Graphs-particles/index.html", tags: ["Canvas", "Gráficos", "Generativo"] },
-    { name: "Motion Detection Browser", desc: "Lectura de acelerómetro y giroscopio móvil para mover esferas y partículas con inclinación.", link: "./Motion-detection-browser/index.html", tags: ["Sensores", "Móvil", "Hardware"] },
-    { name: "Mouse Detection Browser", desc: "Visualizador de mira táctica y coordenadas del cursor en tiempo real sobre el lienzo.", link: "./Mouse-detection-browser/index.html", tags: ["Canvas", "Mouse", "Tracking"] },
-    { name: "Multiplayer Shoot Game", desc: "Juego de disparos multijugador 2D en tiempo real (600x400) con WebSockets.", link: "./Multiplayer-shoot-game/index.html", tags: ["Node.js", "Socket.io", "Juego 2D"] },
-    { name: "Particulas JS", desc: "Emisión de efectos de partículas y física de expansión en Canvas 2D puro.", link: "./Particulas-JS/index.html", tags: ["Canvas", "Partículas", "Efectos"] },
-    { name: "Platformer Game Phaser", desc: "Juego de plataformas 2D con monedas, puntuación, HUD y controles táctiles usando Phaser.", link: "./Platformer-game-phaser/index.html", tags: ["Phaser", "Juego 2D", "Plataformas"] },
-    { name: "Streaming Socket.io", desc: "Transmisión en vivo de cámara web y recepción cliente-servidor mediante WebSockets.", link: "./Streaming-Socket.io/index.html", tags: ["WebSockets", "Video", "Node.js"] },
-    { name: "Touch Detection Browser", desc: "Detección multitáctil en pantalla con puntos de presión y coordenadas individuales.", link: "./Touch-detection-browser/index.html", tags: ["Táctil", "Móvil", "Canvas"] }
-  ];
+    <footer class="site-footer">
+        Creado por <strong><a href="https://github.com/cmaquera" target="_blank" rel="noopener">CMaquera</a></strong>
+    </footer>
 
-  const grid = document.getElementById("projects");
-  const searchInput = document.getElementById("search");
+    <script>
+        const projects = [
+            { name: "Box2D Esferas", desc: "Simulación física interactiva de esferas y rebotes usando el motor Box2D.", link: "./Box2D-esferas/index.html", tags: ["Física", "Box2D", "Canvas"] },
+            { name: "Ford-Fulkerson", desc: "Visualizador interactivo del algoritmo de flujo máximo en redes de transporte.", link: "./Ford-fulkerson/index.html", tags: ["Algoritmos", "Grafos", "Canvas"] },
+            { name: "Formularios PHP Ajax", desc: "Procesamiento de formularios HTML con POST tradicional y peticiones asíncronas AJAX (Fetch).", link: "./Formularios-PHP-Ajax/index.html", tags: ["PHP", "AJAX", "Backend"] },
+            { name: "Graphs Particles", desc: "Experimento de red de partículas conectadas dinámicamente según su proximidad.", link: "./Graphs-particles/index.html", tags: ["Canvas", "Gráficos", "Generativo"] },
+            { name: "Motion Detection Browser", desc: "Lectura de acelerómetro y giroscopio móvil para mover esferas con la inclinación del teléfono.", link: "./Motion-detection-browser/index.html", tags: ["Sensores", "Móvil", "Hardware"] },
+            { name: "Mouse Detection Browser", desc: "Visualizador de mira táctica y coordenadas del cursor en tiempo real sobre el lienzo.", link: "./Mouse-detection-browser/index.html", tags: ["Canvas", "Mouse", "Tracking"] },
+            { name: "Multiplayer Shoot Game", desc: "Juego de disparos multijugador 2D en tiempo real (600x400) con WebSockets y soporte táctil.", link: "./Multiplayer-shoot-game/index.html", tags: ["Node.js", "Socket.io", "Juego 2D"] },
+            { name: "Particulas JS", desc: "Emisión de efectos de partículas y física de expansión en Canvas 2D puro.", link: "./Particulas-JS/index.html", tags: ["Canvas", "Partículas", "Efectos"] },
+            { name: "Platformer Game Phaser", desc: "Juego de plataformas 2D con monedas, puntuación, HUD y controles táctiles usando Phaser.", link: "./Platformer-game-phaser/index.html", tags: ["Phaser", "Juego 2D", "Plataformas"] },
+            { name: "Streaming Socket.io", desc: "Transmisión en vivo de cámara web y recepción cliente-servidor mediante WebSockets.", link: "./Streaming-Socket.io/index.html", tags: ["WebSockets", "Video", "Node.js"] },
+            { name: "Touch Detection Browser", desc: "Detección multitáctil en pantalla con puntos de presión y coordenadas individuales.", link: "./Touch-detection-browser/index.html", tags: ["Táctil", "Móvil", "Canvas"] }
+        ];
 
-  function renderProjects(items) {
-    grid.innerHTML = "";
-    if (items.length === 0) {
-      grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted); padding: 2rem;">No se encontraron proyectos con ese criterio.</p>';
-      return;
-    }
-    items.forEach(p => {
-      const card = document.createElement("a");
-      card.className = "card";
-      card.href = p.link;
+        const grid = document.getElementById("projects");
+        const searchInput = document.getElementById("search");
 
-      const title = document.createElement("h2");
-      title.textContent = p.name;
+        function renderProjects(items) {
+            grid.innerHTML = "";
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty-msg"><p>No se encontraron proyectos con ese criterio.</p></div>';
+                return;
+            }
+            items.forEach(p => {
+                const card = document.createElement("a");
+                card.className = "card";
+                card.href = p.link;
 
-      const desc = document.createElement("p");
-      desc.textContent = p.desc;
+                const title = document.createElement("h2");
+                title.textContent = p.name;
 
-      const tagsWrap = document.createElement("div");
-      tagsWrap.className = "card-tags";
-      (p.tags || []).forEach(t => {
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        tag.textContent = t;
-        tagsWrap.appendChild(tag);
-      });
+                const desc = document.createElement("p");
+                desc.textContent = p.desc;
 
-      card.appendChild(title);
-      card.appendChild(desc);
-      card.appendChild(tagsWrap);
-      grid.appendChild(card);
-    });
-  }
+                const tagsWrap = document.createElement("div");
+                tagsWrap.className = "card-tags";
+                (p.tags || []).forEach(t => {
+                    const tag = document.createElement("span");
+                    tag.className = "tag";
+                    tag.textContent = t;
+                    tagsWrap.appendChild(tag);
+                });
 
-  renderProjects(projects);
+                const footer = document.createElement("div");
+                footer.className = "card-footer";
+                footer.textContent = "Abrir Proyecto →";
 
-  searchInput.addEventListener("input", (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    if (!q) {
-      renderProjects(projects);
-      return;
-    }
-    const filtered = projects.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.desc.toLowerCase().includes(q) ||
-      (p.tags || []).some(t => t.toLowerCase().includes(q))
-    );
-    renderProjects(filtered);
-  });
-</script>
+                card.appendChild(title);
+                card.appendChild(desc);
+                card.appendChild(tagsWrap);
+                card.appendChild(footer);
+                grid.appendChild(card);
+            });
+        }
+
+        renderProjects(projects);
+
+        searchInput.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            if (!q) {
+                renderProjects(projects);
+                return;
+            }
+            const filtered = projects.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                p.desc.toLowerCase().includes(q) ||
+                (p.tags || []).some(t => t.toLowerCase().includes(q))
+            );
+            renderProjects(filtered);
+        });
+    </script>
 </body>
 </html>

@@ -162,9 +162,26 @@
                         btnToggle.style.background = '#ff5252';
                         btnToggle.style.color = '#fff';
 
+                        // Adaptar dimensiones y relación de aspecto proporcional
+                        function syncCanvasAspect() {
+                            var vw = video.videoWidth || 640;
+                            var vh = video.videoHeight || 480;
+                            var maxDim = 640;
+                            var scale = Math.min(maxDim / vw, maxDim / vh, 1);
+                            var tw = Math.round(vw * scale);
+                            var th = Math.round(vh * scale);
+                            if (canvas.width !== tw || canvas.height !== th) {
+                                canvas.width = tw;
+                                canvas.height = th;
+                            }
+                        }
+
+                        video.onloadedmetadata = syncCanvasAspect;
+
                         // Bucle a ~20 FPS (50 ms)
                         timer = setInterval(function () {
                             if (!activo || video.readyState < 2) return;
+                            syncCanvasAspect();
                             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                             var dataURL = canvas.toDataURL('image/jpeg', 0.4);
 
