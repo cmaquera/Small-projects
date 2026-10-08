@@ -1,63 +1,74 @@
-var canvas = null, 
-	ctx = null, 
-	x = 50, 
-	y = 50, 
-	grafo = null,
-	mouseX = -1000,
-	mouseY = -1000; 
+(function () {
+	'use strict';
+	var canvas = null, 
+		ctx = null, 
+		grafo = null,
+		mouseX = -1000,
+		mouseY = -1000; 
 
-window.requestAnimationFrame = (function () { 
-	return window.requestAnimationFrame || 
-	window.mozRequestAnimationFrame || 
-	window.webkitRequestAnimationFrame || 
-	function (callback) { 
-		window.setTimeout(callback, 17); 
-	}; 
-}()); 
+	function actualizarPuntero(clientX, clientY) {
+		if (!canvas) return;
+		var rect = canvas.getBoundingClientRect();
+		mouseX = clientX - rect.left;
+		mouseY = clientY - rect.top;
+	}
 
-window.addEventListener('mousemove', function(evt){
-	var rect = canvas.getBoundingClientRect();
-	mouseX = evt.clientX - rect.left;
-	mouseY = evt.clientY - rect.top;
-}, false);
+	window.addEventListener('mousemove', function (evt) {
+		actualizarPuntero(evt.clientX, evt.clientY);
+	}, false);
 
+	window.addEventListener('touchmove', function (evt) {
+		if (evt.touches.length > 0) {
+			actualizarPuntero(evt.touches[0].clientX, evt.touches[0].clientY);
+		}
+	}, { passive: true });
 
-function paint(ctx) { 
-	ctx.fillStyle = '#0D0D0D'; 
-	ctx.fillRect(0, 0, canvas.width, canvas.height); 
-	grafo.dibujarGrafo(ctx);
+	window.addEventListener('touchend', function () {
+		mouseX = -1000;
+		mouseY = -1000;
+	}, false);
 
-	ctx.strokeStyle = 'rgba(22,242,77,0.5)';
-	ctx.lineWidth = 2;
-	ctx.beginPath();
-	ctx.arc(mouseX, mouseY, 120, 0, 2*Math.PI);
-	ctx.stroke();
-	ctx.lineWidth = 1;
-} 
+	function paint() { 
+		ctx.fillStyle = '#0D0D0D'; 
+		ctx.fillRect(0, 0, canvas.width, canvas.height); 
+		grafo.dibujarGrafo(ctx);
 
-function act() {
-	grafo.moverNodos(canvas.width, canvas.height, mouseX, mouseY);
+		if (mouseX > 0 && mouseY > 0) {
+			ctx.strokeStyle = 'rgba(22,242,77,0.45)';
+			ctx.lineWidth = 1.5;
+			ctx.beginPath();
+			ctx.arc(mouseX, mouseY, 120, 0, 2 * Math.PI);
+			ctx.stroke();
+		}
+	} 
 
-	grafo.generarListaAdiaciencia();
-	grafo.actualizarAristas();
-} 
+	function act() {
+		grafo.moverNodos(canvas.width, canvas.height, mouseX, mouseY);
+	} 
 
-function run() { 
-	window.requestAnimationFrame(run); 
-	act(); 
-	paint(ctx); 
-} 
+	function run() { 
+		window.requestAnimationFrame(run); 
+		act(); 
+		paint(); 
+	} 
 
-function init() { 
-	canvas = document.getElementById('canvas'); 
-	ctx = canvas.getContext('2d');
-	canvas.height = window.innerHeight;
-	canvas.width = window.innerWidth;
+	function resize() {
+		if (!canvas) return;
+		canvas.height = window.innerHeight;
+		canvas.width = window.innerWidth;
+	}
 
-	grafo = new Grafo();
-	grafo.inicializar();
+	function init() { 
+		canvas = document.getElementById('canvas'); 
+		ctx = canvas.getContext('2d');
+		resize();
 
-	run();
-}
+		grafo = new Grafo();
+		grafo.inicializar();
 
-window.addEventListener('load', init, false);
+		window.addEventListener('resize', resize, false);
+		run();
+	} 
+
+	window.addEventListener('load', init, false);
+}());

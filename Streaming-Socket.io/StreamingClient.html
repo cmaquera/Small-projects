@@ -1,20 +1,154 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-        <title>...Video</title>
-    </head>
-    <body>
-        <img id="miimg"></img>
-        <script src="http://localhost:3737/socket.io/socket.io.js"></script>
-        <script>
-            var websocket = io.connect("http://localhost:3737");
-            websocket.on('setFrame', proc);
-            
-            function proc(img){
-                document.querySelector("miimg").src = img;
-            };
-            
-        </script>
-    </body>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receptor de Streaming - Socket.io</title>
+    <link rel="stylesheet" href="../shared.css">
+    <style>
+        .stream-container {
+            max-width: 700px;
+            margin: 1.5rem auto;
+            text-align: center;
+            padding: 0 1rem;
+        }
+        .screen-box {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border: 2px solid #16F24D;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        #miimg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .empty-hint {
+            color: #5a6270;
+            padding: 1.5rem;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .stat-card {
+            border: 1px solid #16F24D;
+            border-radius: 6px;
+            padding: 8px;
+            background: rgba(22, 242, 77, 0.05);
+        }
+        .stat-card .val {
+            font-size: 16px;
+            font-weight: bold;
+            color: #6DF28E;
+            display: block;
+        }
+        .stat-card .lbl {
+            font-size: 11px;
+            color: #9aa1ad;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js" onerror="this.onerror=null;this.src='https://cdn.socket.io/4.7.4/socket.io.min.js';"></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="back-link" href="index.html">← Volver al estudio de streaming</a>
+        <h1>Receptor de Video en Vivo</h1>
+    </header>
+
+    <main class="stream-container">
+        <p style="color: #6DF28E; margin-bottom: 1rem;">
+            Esta pantalla recibe y renderiza los fotogramas transmitidos por cualquier emisor a través de WebSockets.
+        </p>
+
+        <div class="screen-box">
+            <img id="miimg" alt="Video en vivo">
+            <div id="hint" class="empty-hint">
+                <p>● Esperando que el transmisor emita señal...</p>
+                <p style="font-size: 12px; color: #444;">(Abre <a href="Streaming.html" style="color:#16F24D">Streaming.html</a> en otra ventana para transmitir tu cámara)</p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span id="stat-estado" class="val" style="color:#ffd23e">Conectando</span>
+                <span class="lbl">Estado de Señal</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-fps" class="val">0</span>
+                <span class="lbl">FPS en Vivo</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-frames" class="val">0</span>
+                <span class="lbl">Cuadros Totales</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
+
+    <script>
+        (function () {
+            'use strict';
+            var imgEl = document.getElementById('miimg');
+            var hintEl = document.getElementById('hint');
+            var estadoEl = document.getElementById('stat-estado');
+            var fpsEl = document.getElementById('stat-fps');
+            var framesEl = document.getElementById('stat-frames');
+
+            var totalFrames = 0;
+            var fpsCount = 0;
+
+            var socket = (typeof io !== 'undefined') ? (
+                window.location.port === '3737' ? io() : io('/streaming')
+            ) : null;
+
+            if (socket) {
+                socket.on('connect', function () {
+                    estadoEl.textContent = 'En Espera';
+                    estadoEl.style.color = '#ffd23e';
+                });
+
+                socket.on('setFrame', function (frameData) {
+                    totalFrames++;
+                    fpsCount++;
+                    framesEl.textContent = totalFrames;
+
+                    if (hintEl.style.display !== 'none') {
+                        hintEl.style.display = 'none';
+                        imgEl.style.display = 'block';
+                        estadoEl.textContent = 'EN VIVO';
+                        estadoEl.style.color = '#16F24D';
+                    }
+
+                    imgEl.src = frameData;
+                });
+
+                socket.on('disconnect', function () {
+                    estadoEl.textContent = 'Desconectado';
+                    estadoEl.style.color = '#ff5252';
+                });
+            } else {
+                estadoEl.textContent = 'Error Socket';
+                estadoEl.style.color = '#ff5252';
+            }
+
+            setInterval(function () {
+                fpsEl.textContent = fpsCount;
+                fpsCount = 0;
+            }, 1000);
+        }());
+    </script>
+</body>
 </html>

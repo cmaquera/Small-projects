@@ -1,62 +1,120 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8"/>
-		<title>Formularios PHP Ajax</title>
-		<link rel="stylesheet" type="text/css" href="../shared.css">
-		<link rel="stylesheet" type="text/css" href="estilo.css">
-	</head>
-	<body>
-		<header class="site-header">
-			<a class="back-link" href="../index.html">← Volver al índice</a>
-			<div id='titulo'><h1>Pruebas con submits</h1></div>
-		</header>
-
-		<form id='formulario0' method="post">
-			<div class='contenido'>
-				<p>Ingrese la Cantidad de Nodos</p>
-				<p>Cantidad de Nodos<input class="campo" name="nodos" id="nodos" type="number" value="0" oninput="validacion('nodos')" required/></p>
-				<input class="botones" id="boton11" type="button" value="Aceptar" onclick="ocultarDialogo('formulario0')"/>
-				<input class="botones" id="boton12"type="button" value="Cancelar" onclick="ocultarDialogo('formulario0')"/>
-			</div>
-		</form>
-
-		<form id='formulario1' method="post">
-			<div class='contenido'>
-				<p>Ingrese las Capacidades</p>
-				<p>Ni - Nf <input class="campo" name="capacidad1" type="number" value="0" oninput="validacion('capacidad1')" required/></p>
-				<p>Nf - Ni <input class="campo" mane="capacidad2" type="number" value="0" oninput="validacion('capacidad2')" required/></p>
-				<input class="botones" type="submit" value="Aceptar" onclick="alert('hola')"/>
-				<input class="botones" type="button" value="Cancelar"/>
-			</div>
-		</form>
-		
-		<form id='formulario2' method="post">
-			<div class='contenido'>
-				<p>Calcular el Flujo Maximo</p>
-				<p>Fuente   -    Sumidero</p>
-				<input class="campo" name="fuente" id="fuente" type="text" placeholder="nodo del grafo" oninput="validacion('fuente')" required pattern="([a-z]{1})" maxlength="1"/>
-				<input class="campo" name="sumidero" id="sumidero" type="text" placeholder="nodo del grafo" oninput="validacion('sumidero')" required pattern="([a-z]{1})" maxlength="1"/></br>
-				<input class="botones" type="submit" value="Aceptar"/>
-				<input class="botones" type="button" value="Cancelar"/>
-			</div>
-		</form>
-
-		<form id='formulario3' method="post" action="acion.php">
-			<div class='contenido'>
-				<p>Su nombre: <input class="campo" type="text" name="nombre" required/></p>
-				<p>Su edad: <input class="campo" type="text" name="edad" required/></p>
-				<p><input class="botones" type="submit" /></p>
-			</div>
-		</form>
-
-		<footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
-		<script type="text/javascript">
-
-		function msj(){
-			alert("creo que funciona lo que digo");
+<html lang="es">
+<head>
+	<meta charset="utf-8"/>
+	<title>Formularios PHP y AJAX</title>
+	<link rel="stylesheet" type="text/css" href="../shared.css">
+	<style type="text/css">
+		.form-container {
+			max-width: 600px;
+			margin: 2rem auto;
+			padding: 0 1rem;
 		}
+		.card-form {
+			background: rgba(13,13,13,.85);
+			border: 2px solid #16F24D;
+			border-radius: 8px;
+			padding: 1.5rem;
+			margin-bottom: 2rem;
+		}
+		.card-form h2 {
+			font-size: 1.15rem;
+			margin-bottom: 1rem;
+			color: #16F24D;
+		}
+		.campo-grupo {
+			margin-bottom: 1rem;
+			text-align: left;
+		}
+		.campo-grupo label {
+			display: block;
+			font-size: 0.9rem;
+			margin-bottom: 0.3rem;
+			color: #6DF28E;
+		}
+		.resultado-ajax {
+			margin-top: 1rem;
+			padding: 0.75rem;
+			border: 1px dashed #16F24D;
+			border-radius: 6px;
+			background: rgba(22,242,77,0.05);
+			min-height: 40px;
+		}
+	</style>
+</head>
+<body>
+	<header class="site-header">
+		<a class="back-link" href="../index.html">← Volver al índice</a>
+		<div id='titulo'><h1>Formularios PHP y AJAX</h1></div>
+	</header>
 
-		</script>
-	</body>
+	<main class="form-container">
+		<!-- Ejemplo 1: Envío síncrono estándar POST a PHP -->
+		<section class="card-form">
+			<h2>1. Envío POST Directo (PHP Tradicional)</h2>
+			<form method="post" action="accion.php">
+				<div class="campo-grupo">
+					<label for="post-nombre">Nombre:</label>
+					<input type="text" id="post-nombre" name="nombre" placeholder="Ingresa tu nombre" required/>
+				</div>
+				<div class="campo-grupo">
+					<label for="post-edad">Edad:</label>
+					<input type="number" id="post-edad" name="edad" placeholder="Ingresa tu edad" required min="1" max="120"/>
+				</div>
+				<button class="btn btn1" type="submit">Enviar por POST</button>
+			</form>
+		</section>
+
+		<!-- Ejemplo 2: Envío asíncrono vía AJAX / Fetch -->
+		<section class="card-form">
+			<h2>2. Envío Asíncrono con AJAX (Fetch API)</h2>
+			<form id="form-ajax" onsubmit="enviarAjax(event)">
+				<div class="campo-grupo">
+					<label for="ajax-nombre">Nombre:</label>
+					<input type="text" id="ajax-nombre" name="nombre" placeholder="Nombre para AJAX" required/>
+				</div>
+				<div class="campo-grupo">
+					<label for="ajax-apellido">Apellido:</label>
+					<input type="text" id="ajax-apellido" name="apellido" placeholder="Apellido para AJAX" required/>
+				</div>
+				<button class="btn btn1" type="submit">Enviar con AJAX</button>
+			</form>
+			<div class="resultado-ajax" id="resultado-ajax">
+				<em>Los datos procesados por PHP aparecerán aquí sin recargar la página.</em>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
+
+	<script type="text/javascript">
+		function enviarAjax(e) {
+			e.preventDefault();
+			var nombre = document.getElementById('ajax-nombre').value;
+			var apellido = document.getElementById('ajax-apellido').value;
+			var contenedor = document.getElementById('resultado-ajax');
+
+			contenedor.innerHTML = 'Enviando petición a procesar_datos.php...';
+
+			var formData = new FormData();
+			formData.append('nombre', nombre);
+			formData.append('apellido', apellido);
+
+			fetch('procesar_datos.php', {
+				method: 'POST',
+				body: formData
+			})
+			.then(function(res) {
+				if (!res.ok) throw new Error('Error HTTP: ' + res.status);
+				return res.text();
+			})
+			.then(function(html) {
+				contenedor.innerHTML = html;
+			})
+			.catch(function(err) {
+				contenedor.innerHTML = '<span style="color: #ff6b6b;">Error: Para probar este script ejecuta un servidor PHP (ej. php -S localhost:8000). Detalle: ' + err.message + '</span>';
+			});
+		}
+	</script>
+</body>
 </html>

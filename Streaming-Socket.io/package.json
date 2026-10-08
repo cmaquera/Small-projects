@@ -1,0 +1,15 @@
+{
+  "name": "streaming-socket-io",
+  "version": "1.0.0",
+  "description": "Video streaming experiment over WebSockets using Socket.io and Canvas",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Cesar Maquera",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4"
+  }
+}

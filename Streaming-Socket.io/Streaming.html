@@ -1,69 +1,212 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-        <title>...Video</title>
-        <style type="text/css">
-            video{
-                display: none;
-            }
-        </style>
-    </head>
-    <body>
-        <video autoplay></video>
-        <canvas id="micanvas" width="800" height="600"> Tu navegador no soporta canvas</canvas>
-        <script src="http://localhost:3737/socket.io/socket.io.js"></script>
-        <script type="text/javascript">
-            var bandera= 0;
-            var websocket = io.connect("http://localhost:3737");
-            window.URL = window.URL || window.webkitURL;
-            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-            
-            
-            navigator.getUserMedia({audio: true, video: { width: 1280, height: 720 }},function(vid){
-                bandera = 1;
-                document.querySelector('video').srcObject = vid; //window.URL.createObjectURL(vid);
-            },function(err) {
-                console.log("An error occured! " + err);
-            });
-            
-            window.requestAnimFrame = (function(callback){
-                return window.requestAnimationFrame ||
-                window.webkitRequestAnimationFrame ||
-                window.mozRequestAnimationFrame ||
-                window.oRequestAnimationFrame ||
-                window.msRequestAnimationFrame ||
-                function(callback){
-                    window.setTimeout(callback, 1000 / 100);
-                };
-            })();
-            
-            
-            function dFrame(ctx, canvas, video){
-                ctx.drawImage(video, 0,0);
-                
-                var dataURL = canvas.toDataURL('image/jpeg', 0.2);
-                
-                if(bandera != 0){
-                    websocket.emit('newFrame', dataURL);
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transmisor de Video - Socket.io</title>
+    <link rel="stylesheet" href="../shared.css">
+    <style>
+        .transmitter-main {
+            max-width: 700px;
+            margin: 1.5rem auto;
+            text-align: center;
+            padding: 0 1rem;
+        }
+        .canvas-wrap {
+            position: relative;
+            background: #000;
+            border: 2px solid #16F24D;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        #micanvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+        video {
+            display: none;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .stat-card {
+            border: 1px solid #16F24D;
+            border-radius: 6px;
+            padding: 8px;
+            background: rgba(22, 242, 77, 0.05);
+        }
+        .stat-card .val {
+            font-size: 16px;
+            font-weight: bold;
+            color: #6DF28E;
+            display: block;
+        }
+        .stat-card .lbl {
+            font-size: 11px;
+            color: #9aa1ad;
+        }
+        .ctrl-panel {
+            margin-top: 1rem;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js" onerror="this.onerror=null;this.src='https://cdn.socket.io/4.7.4/socket.io.min.js';"></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="back-link" href="index.html">← Volver al estudio de streaming</a>
+        <h1>Transmisor de Cámara en Vivo</h1>
+    </header>
+
+    <main class="transmitter-main">
+        <p style="color: #6DF28E; margin-bottom: 1rem;">
+            Esta pantalla captura tu cámara y emite fotogramas periódicos hacia el servidor WebSocket.
+        </p>
+
+        <div class="canvas-wrap">
+            <video autoplay playsinline muted></video>
+            <canvas id="micanvas" width="640" height="480"></canvas>
+        </div>
+
+        <div class="ctrl-panel">
+            <button id="btn-toggle" class="btn btn1" type="button">▶ Iniciar Cámara y Emisión</button>
+            <a class="btn btn1" href="StreamingClient.html" target="_blank">Abrir Receptor ↗</a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span id="stat-estado" class="val" style="color:#ffd23e">Inactivo</span>
+                <span class="lbl">Estado Emisión</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-fps" class="val">0</span>
+                <span class="lbl">FPS Enviados</span>
+            </div>
+            <div class="stat-card">
+                <span id="stat-frames" class="val">0</span>
+                <span class="lbl">Cuadros Emitidos</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
+
+    <script>
+        (function () {
+            'use strict';
+            var canvas = document.getElementById('micanvas');
+            var ctx = canvas.getContext('2d');
+            var video = document.querySelector('video');
+            var btnToggle = document.getElementById('btn-toggle');
+
+            var estadoEl = document.getElementById('stat-estado');
+            var fpsEl = document.getElementById('stat-fps');
+            var framesEl = document.getElementById('stat-frames');
+
+            var totalFrames = 0;
+            var fpsCount = 0;
+            var activo = false;
+            var mediaStream = null;
+            var timer = null;
+
+            var socket = (typeof io !== 'undefined') ? (
+                window.location.port === '3737' ? io() : io('/streaming')
+            ) : null;
+
+            // Dibujar patrón inicial en canvas
+            ctx.fillStyle = '#0D0D0D';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#16F24D';
+            ctx.font = '16px "Droid Sans Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Presiona "Iniciar Cámara" para comenzar', canvas.width / 2, canvas.height / 2);
+
+            function iniciar() {
+                if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    alert('⚠️ Bloqueo de seguridad del celular (HTTPS requerido):\n\nLos navegadores en celulares bloquean el acceso a la cámara cuando la conexión es HTTP con una IP local (' + location.hostname + ').\n\nSoluciones:\n1. En Chrome móvil ve a: chrome://flags/#unsafely-treat-insecure-origin-as-secure\n   Activa el flag y añade: ' + window.location.origin + '\n2. O genera un túnel HTTPS (ej. localtunnel o ngrok).\n3. O prueba desde una PC en http://localhost:8000.');
+                    return;
                 }
-                
-                requestAnimFrame(function(){
-                   dFrame(ctx,canvas, video); 
-                });
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Navegador no compatible o sin soporte para captura de cámara (getUserMedia).');
+                    return;
+                }
+
+                var constraints = {
+                    audio: false,
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function (stream) {
+                        mediaStream = stream;
+                        video.srcObject = stream;
+                        video.play();
+                        activo = true;
+
+                        estadoEl.textContent = 'TRANSMITIENDO';
+                        estadoEl.style.color = '#16F24D';
+                        btnToggle.textContent = '⏹ Detener Emisión';
+                        btnToggle.style.background = '#ff5252';
+                        btnToggle.style.color = '#fff';
+
+                        // Bucle a ~20 FPS (50 ms)
+                        timer = setInterval(function () {
+                            if (!activo || video.readyState < 2) return;
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            var dataURL = canvas.toDataURL('image/jpeg', 0.4);
+
+                            if (socket) {
+                                socket.emit('newFrame', dataURL);
+                            }
+
+                            totalFrames++;
+                            fpsCount++;
+                            framesEl.textContent = totalFrames;
+                        }, 50);
+                    })
+                    .catch(function (err) {
+                        alert('Error al acceder a la cámara (' + err.name + '): ' + err.message);
+                    });
             }
-            
-            window.addEventListener('load', init);
-            
-            
-            function init(){
-                var canvas = document.querySelector('#micanvas');
-                var video = document.querySelector('video');
-                var ctx = canvas.getContext('2d');
-                
-                dFrame(ctx, canvas, video);
+
+            function detener() {
+                activo = false;
+                if (timer) clearInterval(timer);
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(function (t) { t.stop(); });
+                    mediaStream = null;
+                }
+
+                estadoEl.textContent = 'Inactivo';
+                estadoEl.style.color = '#ffd23e';
+                btnToggle.textContent = '▶ Iniciar Cámara y Emisión';
+                btnToggle.style.background = '#16F24D';
+                btnToggle.style.color = '#0D0D0D';
+                fpsEl.textContent = '0';
             }
-            
-        </script>
-    </body>
+
+            btnToggle.addEventListener('click', function () {
+                if (activo) { detener(); } else { iniciar(); }
+            });
+
+            setInterval(function () {
+                fpsEl.textContent = fpsCount;
+                fpsCount = 0;
+            }, 1000);
+        }());
+    </script>
+</body>
 </html>

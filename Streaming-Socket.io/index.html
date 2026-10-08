@@ -1,33 +1,490 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Streaming Socket.io</title>
-    </head>
-    <body>
-        <video autoplay controls></video>
-        <script type="text/javascript">
-/*            window.URL = window.URL || window.webkitURL;
-            navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia 
-            || navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia;
-            
-            navigator.getUserMedia({audio: false, video: true},function(vid){
-                document.querySelector('video').src = window.URL.createObjectURL(vid);
-            },function(err) {
-                console.log("An error occured! " + err);
-            });
-*/
-            // Prefer camera resolution nearest to 1280x720.
-            var constraints = { audio: false, video: { width: 1280, height: 720 } }; 
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming en Tiempo Real - Socket.io</title>
+    <link rel="stylesheet" href="../shared.css">
+    <style>
+        .streaming-main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem 1rem 2.5rem;
+        }
 
-            navigator.mediaDevices.getUserMedia(constraints)
-            .then(function(mediaStream) {
-            var video = document.querySelector('video');
-            video.srcObject = mediaStream;
-            video.onloadedmetadata = function(e) {
-                video.play();
-            };
-            })
-            .catch(function(err) { console.log(err.name + ": " + err.message); }); // always check for errors at the end.
-        </script>
-    </body>
+        /* Banner de estado del servidor */
+        .server-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #16F24D;
+            background: rgba(22, 242, 77, 0.08);
+            color: #6DF28E;
+        }
+        .server-status.offline {
+            border-color: #ff5252;
+            background: rgba(255, 82, 82, 0.1);
+            color: #ff7b7b;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #16F24D;
+            box-shadow: 0 0 8px #16F24D;
+        }
+        .server-status.offline .status-dot {
+            background: #ff5252;
+            box-shadow: 0 0 8px #ff5252;
+        }
+
+        /* Diagrama explicativo */
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+        .step-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(22, 242, 77, 0.4);
+            border-radius: 8px;
+            padding: 12px 14px;
+            text-align: left;
+        }
+        .step-card .num {
+            font-size: 11px;
+            color: #16F24D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .step-card h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #e8eaed;
+        }
+        .step-card p {
+            font-size: 12px;
+            color: #9aa1ad;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Panel dual de video (Emisor / Receptor) */
+        .stream-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 1.5rem;
+        }
+        .stream-card {
+            background: rgba(13, 13, 13, 0.85);
+            border: 2px solid #16F24D;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stream-card h2 {
+            font-size: 16px;
+            color: #16F24D;
+            margin-bottom: 12px;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stream-card h2 .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(22, 242, 77, 0.15);
+            color: #6DF28E;
+            border: 1px solid #16F24D;
+        }
+
+        .screen-view {
+            width: 100%;
+            height: 240px;
+            background: #000;
+            border: 1px solid rgba(22, 242, 77, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .screen-view video, .screen-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .screen-view .placeholder {
+            color: #5a6270;
+            font-size: 13px;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        /* Métricas */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .metric {
+            background: rgba(22, 242, 77, 0.05);
+            border: 1px solid rgba(22, 242, 77, 0.25);
+            border-radius: 6px;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        .metric .label {
+            font-size: 10px;
+            color: #9aa1ad;
+            display: block;
+        }
+        .metric .val {
+            font-size: 14px;
+            font-weight: bold;
+            color: #6DF28E;
+        }
+
+        .actions-bar {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .links-nav {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(22, 242, 77, 0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+    </style>
+    <!-- Carga de socket.io del servidor local con fallback a CDN -->
+    <script src="/socket.io/socket.io.js" onerror="this.onerror=null;this.src='https://cdn.socket.io/4.7.4/socket.io.min.js';"></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="back-link" href="../index.html">← Volver al índice</a>
+        <h1>Transmisión de Video en Tiempo Real</h1>
+    </header>
+
+    <main class="streaming-main">
+        <center>
+            <div id="status-badge" class="server-status">
+                <span class="status-dot"></span>
+                <span id="status-text">Conectando al servidor Socket.io en tiempo real...</span>
+            </div>
+        </center>
+
+        <!-- Cómo funciona -->
+        <section class="pipeline">
+            <div class="step-card">
+                <span class="num">Paso 1</span>
+                <h3>Captura Local</h3>
+                <p>El navegador solicita acceso a tu cámara mediante la API <code>getUserMedia</code>.</p>
+            </div>
+            <div class="step-card">
+                <span class="num">Paso 2</span>
+                <h3>Codificación a JPEG</h3>
+                <p>Un canvas oculto captura fotogramas periódicos y los comprime en Base64.</p>
+            </div>
+            <div class="step-card">
+                <span class="num">Paso 3</span>
+                <h3>Retransmisión WebSocket</h3>
+                <p>El servidor WebSocket recibe el evento <code>newFrame</code> y lo distribuye a los espectadores en tiempo real.</p>
+            </div>
+            <div class="step-card">
+                <span class="num">Paso 4</span>
+                <h3>Recepción en Vivo</h3>
+                <p>El cliente recibe <code>setFrame</code> y actualiza instantáneamente la etiqueta <code>&lt;img&gt;</code>.</p>
+            </div>
+        </section>
+
+        <!-- Panel de Estudio: Emisor vs Receptor -->
+        <div class="stream-grid">
+            <!-- EMISOR -->
+            <section class="stream-card">
+                <h2>
+                    <span>Emisor (Tu Cámara)</span>
+                    <span id="emisor-badge" class="badge">Inactivo</span>
+                </h2>
+                <div class="screen-view">
+                    <video id="emisor-video" autoplay playsinline muted style="display:none;"></video>
+                    <div id="emisor-placeholder" class="placeholder">
+                        Presiona "Iniciar Cámara" para comenzar la emisión.
+                    </div>
+                </div>
+
+                <div class="metrics-bar">
+                    <div class="metric">
+                        <span class="label">FPS Salida</span>
+                        <span id="emisor-fps" class="val">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Cuadros Enviados</span>
+                        <span id="emisor-frames" class="val">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Resolución</span>
+                        <span id="emisor-res" class="val">480x360</span>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button id="btn-toggle-emisor" class="btn btn1" type="button">▶ Iniciar Cámara y Emisión</button>
+                </div>
+            </section>
+
+            <!-- RECEPTOR -->
+            <section class="stream-card">
+                <h2>
+                    <span>Receptor (Señal en Vivo)</span>
+                    <span id="receptor-badge" class="badge">Esperando señal</span>
+                </h2>
+                <div class="screen-view">
+                    <img id="receptor-img" alt="Transmisión en vivo" style="display:none;">
+                    <div id="receptor-placeholder" class="placeholder">
+                        Esperando que algún emisor transmita fotogramas por el WebSocket...
+                    </div>
+                </div>
+
+                <div class="metrics-bar">
+                    <div class="metric">
+                        <span class="label">FPS Recibidos</span>
+                        <span id="receptor-fps" class="val">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Cuadros Recibidos</span>
+                        <span id="receptor-frames" class="val">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Espectadores</span>
+                        <span id="viewer-count" class="val">1</span>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <a class="btn btn1" href="StreamingClient.html" target="_blank">Abrir Receptor en otra Pestaña ↗</a>
+                </div>
+            </section>
+        </div>
+
+        <nav class="links-nav">
+            <span><strong>Vistas Dedicadas:</strong></span>
+            <a class="back-link" href="Streaming.html">Página Emisora Independiente (Streaming.html)</a>
+            <a class="back-link" href="StreamingClient.html">Página Receptora Independiente (StreamingClient.html)</a>
+        </nav>
+    </main>
+
+    <!-- Canvas oculto para muestreo de fotogramas -->
+    <canvas id="hidden-canvas" width="480" height="360" style="display:none;"></canvas>
+
+    <footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var socket = null;
+            var socketConnected = false;
+            var socketUrl = (window.location.port === '3737') ? window.location.origin : 'http://localhost:3737';
+
+            // Elementos DOM
+            var statusBadge = document.getElementById('status-badge');
+            var statusText = document.getElementById('status-text');
+            var viewerCountEl = document.getElementById('viewer-count');
+
+            var btnToggleEmisor = document.getElementById('btn-toggle-emisor');
+            var emisorVideo = document.getElementById('emisor-video');
+            var emisorPlaceholder = document.getElementById('emisor-placeholder');
+            var emisorBadge = document.getElementById('emisor-badge');
+            var emisorFpsEl = document.getElementById('emisor-fps');
+            var emisorFramesEl = document.getElementById('emisor-frames');
+
+            var receptorImg = document.getElementById('receptor-img');
+            var receptorPlaceholder = document.getElementById('receptor-placeholder');
+            var receptorBadge = document.getElementById('receptor-badge');
+            var receptorFpsEl = document.getElementById('receptor-fps');
+            var receptorFramesEl = document.getElementById('receptor-frames');
+
+            var hiddenCanvas = document.getElementById('hidden-canvas');
+            var hiddenCtx = hiddenCanvas.getContext('2d');
+
+            // Estado de emisión
+            var emitiendo = false;
+            var mediaStream = null;
+            var emisorFramesCount = 0;
+            var emisorFpsCounter = 0;
+            var emisorInterval = null;
+
+            // Estado de recepción
+            var receptorFramesCount = 0;
+            var receptorFpsCounter = 0;
+            var receptorUltimoTiempo = 0;
+
+            // Inicializar Socket.io
+            function initSocket() {
+                if (typeof io === 'undefined') {
+                    statusBadge.className = 'server-status offline';
+                    statusText.textContent = 'Socket.io no cargado.';
+                    return;
+                }
+
+                try {
+                    // Si corre standalone en 3737 usa root io(), de lo contrario usa el namespace unificado /streaming
+                    socket = (window.location.port === '3737') ? io() : io('/streaming');
+
+                    socket.on('connect', function () {
+                        socketConnected = true;
+                        statusBadge.className = 'server-status';
+                        statusText.textContent = '● Servidor Socket.io Conectado en tiempo real';
+                    });
+
+                    socket.on('connect_error', function () {
+                        socketConnected = false;
+                        statusBadge.className = 'server-status offline';
+                        statusText.textContent = '○ Servidor Socket.io desconectado (verifica que el servidor Node esté iniciado)';
+                    });
+
+                    socket.on('clientCount', function (count) {
+                        if (viewerCountEl) viewerCountEl.textContent = count;
+                    });
+
+                    socket.on('setFrame', function (frameData) {
+                        receptorFramesCount++;
+                        receptorFpsCounter++;
+                        receptorFramesEl.textContent = receptorFramesCount;
+
+                        if (receptorPlaceholder.style.display !== 'none') {
+                            receptorPlaceholder.style.display = 'none';
+                            receptorImg.style.display = 'block';
+                            receptorBadge.textContent = '● En Vivo';
+                            receptorBadge.style.color = '#16F24D';
+                        }
+                        receptorImg.src = frameData;
+                    });
+                } catch (e) {
+                    console.error('Error inicializando socket:', e);
+                }
+            }
+
+            // Iniciar captura de cámara
+            function iniciarEmision() {
+                if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    alert('⚠️ Bloqueo de seguridad del celular (HTTPS requerido):\n\nLos navegadores en celulares (Chrome, Safari) bloquean el acceso a la cámara cuando la conexión es HTTP con una IP local (' + location.hostname + ').\n\nSoluciones:\n1. En Chrome móvil ve a: chrome://flags/#unsafely-treat-insecure-origin-as-secure\n   Activa el flag y añade: ' + window.location.origin + '\n2. O genera un túnel HTTPS (ej. localtunnel o ngrok).\n3. O prueba desde una PC en http://localhost:8000.');
+                    return;
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Tu navegador no tiene disponible la API de cámara (getUserMedia).\nAsegúrate de usar HTTPS o un origen seguro.');
+                    return;
+                }
+
+                var constraints = {
+                    audio: false,
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function (stream) {
+                        mediaStream = stream;
+                        emisorVideo.srcObject = stream;
+                        emisorVideo.style.display = 'block';
+                        emisorPlaceholder.style.display = 'none';
+                        emisorBadge.textContent = '● Emitiendo';
+                        emisorBadge.style.color = '#16F24D';
+                        btnToggleEmisor.textContent = '⏹ Detener Emisión';
+                        btnToggleEmisor.style.background = '#ff5252';
+                        btnToggleEmisor.style.color = '#fff';
+                        emitiendo = true;
+
+                        // Emitir cuadros a 20 FPS (cada 50 ms)
+                        emisorInterval = setInterval(function () {
+                            if (!emitiendo || emisorVideo.readyState < 2) return;
+
+                            hiddenCtx.drawImage(emisorVideo, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                            var dataUrl = hiddenCanvas.toDataURL('image/jpeg', 0.4);
+
+                            if (socket && socketConnected) {
+                                socket.emit('newFrame', dataUrl);
+                            }
+
+                            emisorFramesCount++;
+                            emisorFpsCounter++;
+                            emisorFramesEl.textContent = emisorFramesCount;
+                        }, 50);
+                    })
+                    .catch(function (err) {
+                        alert('No se pudo acceder a la cámara (' + err.name + '): ' + err.message);
+                    });
+            }
+
+            // Detener emisión
+            function detenerEmision() {
+                emitiendo = false;
+                if (emisorInterval) clearInterval(emisorInterval);
+
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(function (t) { t.stop(); });
+                    mediaStream = null;
+                }
+
+                emisorVideo.style.display = 'none';
+                emisorPlaceholder.style.display = 'block';
+                emisorBadge.textContent = 'Inactivo';
+                emisorBadge.style.color = '#6DF28E';
+                btnToggleEmisor.textContent = '▶ Iniciar Cámara y Emisión';
+                btnToggleEmisor.style.background = '#16F24D';
+                btnToggleEmisor.style.color = '#0D0D0D';
+                emisorFpsEl.textContent = '0';
+            }
+
+            btnToggleEmisor.addEventListener('click', function () {
+                if (emitiendo) {
+                    detenerEmision();
+                } else {
+                    iniciarEmision();
+                }
+            });
+
+            // Medidor periódico de FPS
+            setInterval(function () {
+                emisorFpsEl.textContent = emisorFpsCounter;
+                receptorFpsEl.textContent = receptorFpsCounter;
+                emisorFpsCounter = 0;
+                receptorFpsCounter = 0;
+            }, 1000);
+
+            initSocket();
+        }());
+    </script>
+</body>
 </html>

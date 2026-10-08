@@ -18,7 +18,7 @@ var parPendiente=null;          //indices del par de nodos pendientes de crear u
 var nodoSeleccionado=-1;        //indice del primer nodo seleccionado en modo de agregar caminos
 var resultadoActual=null;       //variable que almacena el ultimo resultado del calculo
 var entradasHabilitadas=false;  //variable que evita registrar los eventos de entrada mas de una vez
-var abc = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','q','r','s','t','u','v','w','x','y','z'];    //arreglo del abecedario para el identificador de cada nodo
+var abc = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];    //arreglo del abecedario para el identificador de cada nodo
 var colores = ['#005A9C', '#B00020', '#6A00A8', '#1B5E20', '#8D6E00', '#01579B'];
 
 function mostrarDialogo(id){

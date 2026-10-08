@@ -15,13 +15,8 @@
 		<script type="text/javascript">
 	        function resize_canvas(){
 	            var canvas = document.getElementById("micanvas");
-	            if (canvas.width  < window.innerWidth)
-	            {
-	                canvas.width  = window.innerWidth;
-	            }
-	
-	            if (canvas.height < window.innerHeight)
-	            {
+	            if (canvas) {
+	                canvas.width = window.innerWidth;
 	                canvas.height = window.innerHeight;
 	            }
 	        }
@@ -156,33 +151,23 @@
 					ultimaPresion = null;
 				}*/
 				
-				for(var i=0; i< 50; i++){
-					particulas.push(new Particula(jugador.x, jugador.y,3, aleatorio(360,0), 9.5*(800/1000)));
+				var maxParticulas = 500;
+				var aGenerar = Math.min(10, Math.max(0, maxParticulas - particulas.length));
+				for(var i=0; i < aGenerar; i++){
+					particulas.push(new Particula(jugador.x, jugador.y, 3, aleatorio(360,0), 9.5*(800/1000)));
 				}
 				
-				for(var i=0; i<particulas.length; i++){
-					particulas[i].vida-=deltaTime;
-					if(particulas[i].vida<0){
+				for(var i = particulas.length - 1; i >= 0; i--){
+					particulas[i].vida -= deltaTime;
+					if(particulas[i].vida < 0){
 						particulas.splice(i, 1);
+						continue;
 					}
 					particulas[i].mover(aleatorio(5,1));
 					
-					/*	
-					if(jugador.distancia(particulas[i].posinicial) < 0){
-					}
-					else if(particulas[i].distancia(jugador) < 0){
-						ang = particulas[i].angulo(particulas[i].posinicial);
-						particulas[i].mover(ang,10);
-					}
-					
-					
-					if(jugador.distancia((particulas[i])) > 100){
-						
-					}*/
-					
-					if(particulas[i].radio == particulas[i].rmax) 
+					if(particulas[i].radio >= particulas[i].rmax) 
 						particulas[i].estado = true;
-					if(particulas[i].radio == particulas[i].rmin) 
+					if(particulas[i].radio <= particulas[i].rmin) 
 						particulas[i].estado = false;
 						
 					if(particulas[i].estado) 

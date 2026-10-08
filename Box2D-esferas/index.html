@@ -1,9 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Esferas - Box2D</title>
 	<link rel="stylesheet" href="../shared.css">
+	<style>
+		.box2d-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 1.5rem 1rem;
+		}
+		#canvas-debug {
+			border: 2px solid #16F24D;
+			border-radius: 8px;
+			background: #111;
+			max-width: 100%;
+			height: auto;
+			display: block;
+			touch-action: manipulation;
+		}
+		.controls-bar {
+			margin-top: 1rem;
+			display: flex;
+			gap: 1rem;
+			align-items: center;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		.hint-text {
+			color: #6DF28E;
+			font-size: 14px;
+		}
+	</style>
 	<script type="text/javascript" src="js/Box2d.min.js"></script>
 </head>
 
@@ -12,11 +42,17 @@
 		<a class="back-link" href="../index.html">← Volver al índice</a>
 		<h1>Box2D con JavaScript</h1>
 	</header>
-	<center>
-		<canvas id="canvas-debug" width='600' height='400'></canvas>
-	</center>
+
+	<main class="box2d-container">
+		<p class="hint-text">Haz clic o toca en el lienzo para soltar esferas</p>
+		<canvas id="canvas-debug" width="600" height="400"></canvas>
+		<div class="controls-bar">
+			<button class="btn btn1" id="btn-limpiar" type="button">Limpiar Esferas</button>
+			<span id="contador-esferas" class="hint-text">Esferas: 0</span>
+		</div>
+	</main>
+
 	<footer class="site-footer">Creado por <strong><a href="https://github.com/cmaquera">CMaquera</a></strong></footer>
 	<script type="text/javascript" src="js/main.js"></script>
 </body>
-
 </html>

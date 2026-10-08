@@ -1,4 +1,2 @@
 <?php
-$nombre = $_POST['nombre'];
-echo $nombre;
-?>
+require_once __DIR__ . '/accion.php';

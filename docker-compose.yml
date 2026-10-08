@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  small-projects:
+    build: .
+    container_name: small-projects-app
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    environment:
+      - PORT=8000
