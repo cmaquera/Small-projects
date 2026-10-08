@@ -1,10 +1,21 @@
 // Sistema de nodos y grafos para canvas
 var RADIO_INFLUENCIA_MOUSE = 120;   // radio en el que el mouse afecta a los nodos
 var FUERZA_REPULSION = 8;           // intensidad con la que el mouse aparta los nodos
-var DISTANCIA_CONEXION_MAX = 70;    // distancia máxima para trazar arista
+var DISTANCIA_CONEXION_MAX = 85;    // distancia máxima para trazar arista (aumentada para mejor conectividad)
 var DIST_MAX_SQ = DISTANCIA_CONEXION_MAX * DISTANCIA_CONEXION_MAX;
 
 var PALETA = ['#16F24D', '#4FC3F7', '#FF6B6B', '#FFD93D', '#B388FF', '#FF8A65', '#4DD8B5', '#F48FB1'];
+
+// Función auxiliar para aclarar el color hacia tonos luminosos que resalten sobre fondos oscuros
+function aclararColor(hex, factor) {
+	var r = parseInt(hex.slice(1, 3), 16);
+	var g = parseInt(hex.slice(3, 5), 16);
+	var b = parseInt(hex.slice(5, 7), 16);
+	r = Math.min(255, Math.round(r + (255 - r) * factor));
+	g = Math.min(255, Math.round(g + (255 - g) * factor));
+	b = Math.min(255, Math.round(b + (255 - b) * factor));
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
 
 function Nodo(x, y, radio) {
 	this.radio = radio;
@@ -13,6 +24,8 @@ function Nodo(x, y, radio) {
 	this.desx = (Math.random() > 0.5) ? 1 : -1;
 	this.desy = (Math.random() > 0.5) ? 1 : -1;
 	this.color = PALETA[Math.floor(Math.random() * PALETA.length)];
+	// Tono 45% más claro para que las líneas de unión contrasten claramente contra el fondo negro
+	this.colorLinea = aclararColor(this.color, 0.45);
 }
 
 Nodo.prototype.mover = function(limitex, limitey, mx, my) {
@@ -42,8 +55,8 @@ Nodo.prototype.dibujar = function(ctx) {
 	ctx.arc(this.x, this.y, this.radio, 0, 2 * Math.PI);
 	ctx.fillStyle = this.color;
 	ctx.fill();
-	ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-	ctx.lineWidth = 1;
+	ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+	ctx.lineWidth = 1.2;
 	ctx.stroke();
 };
 
@@ -77,7 +90,7 @@ Grafo.prototype.dibujarGrafo = function(ctx) {
 	var nodos = this.listaNodos;
 	var len = nodos.length;
 
-	// Dibujar aristas con opacidad basada en distancia
+	// Dibujar aristas con tonos más claros, mayor opacidad y trazo definido para resaltar en fondo negro
 	for (var i = 0; i < len; i++) {
 		var ni = nodos[i];
 		for (var j = i + 1; j < len; j++) {
@@ -87,10 +100,13 @@ Grafo.prototype.dibujarGrafo = function(ctx) {
 			var distSq = dx * dx + dy * dy;
 
 			if (distSq < DIST_MAX_SQ) {
-				var alpha = (1 - (Math.sqrt(distSq) / DISTANCIA_CONEXION_MAX)) * 0.45;
-				ctx.strokeStyle = ni.color;
+				var dist = Math.sqrt(distSq);
+				var factor = 1 - (dist / DISTANCIA_CONEXION_MAX);
+				// Rango de opacidad nítido: 0.35 (lejos) hasta 0.90 (cerca)
+				var alpha = 0.35 + factor * 0.55;
+				ctx.strokeStyle = ni.colorLinea;
 				ctx.globalAlpha = alpha;
-				ctx.lineWidth = 1;
+				ctx.lineWidth = 1.3 + factor * 0.7; // Trazo de 1.3px a 2.0px
 				ctx.beginPath();
 				ctx.moveTo(ni.x, ni.y);
 				ctx.lineTo(nj.x, nj.y);
